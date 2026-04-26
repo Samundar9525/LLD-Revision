@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake & Ladder Logic Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span>Snake & Ladder</span>
+        </div>
+        <div class="nav-group">
+          <a class="nav-pill" href="../index.html">LLD Designs</a>
+          <a class="nav-pill" href="#approach">Architecture Walkthrough</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Logic Behind The Code</p>
+          <h1>Snake and ladder LLD</h1>
+          <p class="hero-text">
+            A visual low-level design walkthrough of your Snake and Ladder system, covering the board model,
+            turn execution, player movement, and the design patterns used to organize the game cleanly.
+          </p>
+          <div class="hero-actions">
+            <a class="cta primary" href="#flow">See Turn Flow</a>
+            <a class="cta secondary" href="#patterns">Why These Patterns</a>
+          </div>
+
+          <div class="hero-metrics">
+            <article>
+              <strong>100</strong>
+              <span>Board positions</span>
+            </article>
+            <article>
+              <strong>4</strong>
+              <span>Supported players</span>
+            </article>
+            <article>
+              <strong>1-6</strong>
+              <span>Dice outcomes</span>
+            </article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="status-dot"></span>
+              <span>Live turn simulation</span>
+            </div>
+
+            <div class="board-preview" id="boardPreview">
+              <div class="path-lines path-one"></div>
+              <div class="path-lines path-two"></div>
+            </div>
+
+            <div class="start-zone" id="startZone">
+              <div class="start-zone-label">0</div>
+              <div class="start-zone-tokens" id="startZoneTokens"></div>
+            </div>
+
+            <div class="turn-console">
+              <div class="console-row">
+                <span>Current Player</span>
+                <strong id="playerName">p1</strong>
+              </div>
+              <div class="console-row">
+                <span>Dice Roll</span>
+                <strong class="dice-readout">
+                  <span class="dice-icon" id="diceIcon" aria-hidden="true">
+                    <span class="pip pip-1"></span>
+                    <span class="pip pip-2"></span>
+                    <span class="pip pip-3"></span>
+                    <span class="pip pip-4"></span>
+                    <span class="pip pip-5"></span>
+                    <span class="pip pip-6"></span>
+                    <span class="pip pip-7"></span>
+                  </span>
+                  <span id="diceValue">4</span>
+                </strong>
+              </div>
+              <div class="console-row">
+                <span>Event</span>
+                <strong id="eventValue">Ladder +15</strong>
+              </div>
+              <div class="console-row">
+                <span>Position</span>
+                <strong id="positionValue">20</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="logic">
+        <div class="section-heading">
+          <p class="eyebrow">High-Level Logic</p>
+          <h2>What the code is trying to achieve</h2>
+        </div>
+
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal">
+            <h3>Functional Requirements</h3>
+            <p>The game allows up to four players to roll a dice, move on a 100-cell board, climb ladders, slide down snakes, and win only by reaching cell 100 exactly.</p>
+          </article>
+          <article class="info-card accent-green reveal">
+            <h3>Core Idea</h3>
+            <p>The game loop repeatedly picks the next player, rolls the dice, calculates the next position, applies board rules, broadcasts the update, and checks for a winner.</p>
+          </article>
+          <article class="info-card accent-blue reveal">
+            <h3>Why this structure works</h3>
+            <p>Each class owns one clear responsibility, so the design stays readable: board data stays in <code>Board</code>, player state stays in <code>User</code>, and orchestration stays in <code>gameManager</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="flow">
+        <div class="section-heading">
+          <p class="eyebrow">Turn Flow</p>
+          <h2>How one player move travels through the system</h2>
+        </div>
+
+        <div class="timeline">
+          <article class="timeline-step reveal">
+            <span class="step-number">01</span>
+            <div>
+              <h3>Pick the current player</h3>
+              <p><code>gameManager</code> removes the next player from the queue, so turns rotate in order.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">02</span>
+            <div>
+              <h3>Roll the dice</h3>
+              <p><code>Dice.getInstance().roll()</code> returns a random number from 1 to 6 using <code>ThreadLocalRandom</code>.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">03</span>
+            <div>
+              <h3>Compute the tentative move</h3>
+              <p>The next position becomes <code>currentPosition + diceValue</code>. If it is greater than 100, the player does not move.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">04</span>
+            <div>
+              <h3>Apply snake or ladder rules</h3>
+              <p><code>Board.applyRules()</code> checks whether the landing cell contains a positive ladder jump or a negative snake drop.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">05</span>
+            <div>
+              <h3>Notify all observers</h3>
+              <p><code>playerState.updatePosition()</code> stores the latest move and informs other players, so the game reacts immediately instead of polling continuously.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">06</span>
+            <div>
+              <h3>Check for a winner</h3>
+              <p>If the adjusted position is 100, the game ends and that player is declared the winner.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section split-section" id="approach">
+        <div class="section-heading">
+          <p class="eyebrow">Approach</p>
+          <h2>How to explain the architecture in an interview or demo</h2>
+        </div>
+
+        <div class="split-layout">
+          <article class="panel reveal">
+            <h3>Class Responsibilities</h3>
+            <ul class="clean-list">
+              <li><strong>snake_and_ladder</strong>: client entry point that starts the game</li>
+              <li><strong>gameManager</strong>: facade and game coordinator</li>
+              <li><strong>Board</strong>: owns snakes, ladders, and cell transformations</li>
+              <li><strong>User</strong>: stores player identity and position</li>
+              <li><strong>Rule</strong>: validates win and retry conditions</li>
+              <li><strong>Dice</strong>: single shared dice generator</li>
+              <li><strong>playerState</strong>: observer subject for live updates</li>
+              <li><strong>Play</strong>: small unit that evaluates one move</li>
+            </ul>
+          </article>
+
+          <article class="panel warm reveal">
+            <h3>Implementation Story</h3>
+            <p>Start with the simplest playable version: one board, a queue of players, a dice service, and a loop. Then improve the design by separating rules, making notifications event-driven, and keeping the facade thin so the system can grow without becoming a god object.</p>
+            <div class="mini-steps">
+              <span>Build domain classes</span>
+              <span>Connect queue + rules</span>
+              <span>Add observer updates</span>
+              <span>Make it testable</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="patterns">
+        <div class="section-heading">
+          <p class="eyebrow">Design Patterns</p>
+          <h2>Why these patterns match this game</h2>
+        </div>
+
+        <div class="pattern-grid">
+          <article class="pattern-card reveal">
+            <h3>Facade</h3>
+            <p><code>gameManager</code> gives one clean entry point. The caller does not need to know how board setup, dice rolling, and player rotation are internally connected.</p>
+          </article>
+          <article class="pattern-card reveal">
+            <h3>Singleton</h3>
+            <p><code>Dice</code> is shared across the whole game. That makes sense for a small demo, though dependency injection would be better for testing in production code.</p>
+          </article>
+          <article class="pattern-card reveal">
+            <h3>Observer</h3>
+            <p>Players react when someone moves. This is cleaner than polling because the system sends updates only when something changes.</p>
+          </article>
+          <article class="pattern-card reveal">
+            <h3>Builder</h3>
+            <p>You mention builders as a future extension. That is a smart next step if board definitions or player setup become more configurable.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading">
+          <p class="eyebrow">Run The Code</p>
+          <h2>Read it here, run it in the embedded Java compiler</h2>
+        </div>
+
+        <div class="compiler-layout">
+          <article class="panel code-panel reveal">
+            <div class="code-panel-header">
+              <h3>Java Source</h3>
+              <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+            </div>
+            <p class="compiler-note">
+              This page is static, so it stays GitHub Pages friendly. For the embedded compiler version, the package line is removed so the class can run directly. If you run it locally in an IDE, you can keep the original package structure.
+            </p>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+class User implements playerStatusObserver {
+    public int id;
+    public String username;
+    public int position;
+    public int lastRoll;
+    public String lastEvent;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    @Override
+    public void update(playerState data) {
+        User updated = data.getLastUpdated();
+        int pos = data.getLastPos();
+        if (updated != null &amp;&amp; updated != this) {
+            System.out.println("[NOTIFY] " + this.username + " sees " + updated.getUsername() + " rolled " + updated.lastRoll + " and moved to " + pos);
+        }
+    }
+}
+
+class Dice {
+    private static volatile Dice instance;
+
+    public int getNumber() {
+        return getInstance().roll();
+    }
+
+    private Dice() {}
+
+    public static Dice getInstance() {
+        if (instance == null) {
+            synchronized (Dice.class) {
+                if (instance == null) {
+                    instance = new Dice();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public int roll() {
+        return ThreadLocalRandom.current().nextInt(1, 7);
+    }
+}
+
+class Board {
+    private int BoardId;
+    ArrayList&lt;Integer&gt; snake = new ArrayList&lt;&gt;(Collections.nCopies(101, 0));
+    ArrayList&lt;Integer&gt; ladder = new ArrayList&lt;&gt;(Collections.nCopies(101, 0));
+
+    public Board() {
+        this.createBoard();
+    }
+
+    public int getBoardId() {
+        return BoardId;
+    }
+
+    public void setBoardId(int boardId) {
+        BoardId = boardId;
+    }
+
+    public void createBoard() {
+        snake.set(17, -7);
+        snake.set(47, -10);
+        snake.set(64, -37);
+        snake.set(80, -17);
+        snake.set(95, -10);
+        snake.set(99, -57);
+        ladder.set(5, 15);
+        ladder.set(33, 45);
+        ladder.set(66, 93);
+        ladder.set(25, 35);
+        ladder.set(40, 65);
+    }
+
+    public int applyRules(int position) {
+        if (position &lt; 0 || position &gt;= snake.size()) return position;
+        int newPosition = position + snake.get(position) + ladder.get(position);
+        return Math.max(0, Math.min(100, newPosition));
+    }
+}
+
+class Rule {
+    public boolean checkRule(int pos){
+       if(pos &gt; 100 ){
+           return true;
+       } else if (pos == 100){
+           System.out.println("Winner Winner Chicken Dinner");
+           return false;
+       }
+       return true;
+    }
+}
+
+class gameManager {
+    Queue&lt;User&gt; playerQueue = new ArrayDeque&lt;&gt;();
+    Board board;
+    Play play;
+    ArrayList&lt;User&gt; players = new ArrayList&lt;&gt;();
+
+    public gameManager(int boardId) {
+        initBoard(boardId);
+    }
+
+    public void initBoard(int id){
+        this.board = new Board();
+        board.setBoardId(id);
+        System.out.println("Board Setup Completed");
+    }
+
+    public void simulate(int playersCount){
+        playerState playersubs = new playerState();
+        for (int i = 0; i &lt; playersCount; i++){
+            User u = new User();
+            u.username = "p" + (i+1);
+            u.setPosition(0);
+            u.lastRoll = 0;
+            u.lastEvent = "-";
+            playersubs.registerObserver(u);
+            playerQueue.offer(u);
+            players.add(u);
+        }
+
+        while(true){
+            User current = playerQueue.poll();
+            if (current == null) break;
+            play = new Play(current);
+            int face = Dice.getInstance().roll();
+            current.lastRoll = face;
+            int next = current.getPosition() + face;
+            if (next &gt; 100){
+                current.lastEvent = "Retry";
+                playerQueue.offer(current);
+                continue;
+            }
+            int adjusted = board.applyRules(next);
+            if (adjusted != next){
+                if (adjusted &gt; next) current.lastEvent = "L(" + (adjusted-next) + ")";
+                else current.lastEvent = "S(" + (next-adjusted) + ")";
+            } else {
+                current.lastEvent = "-";
+            }
+            playersubs.updatePosition(adjusted, current);
+            if (adjusted == 100){
+                System.out.println(current.getUsername() + " WINS game");
+                break;
+            }
+            playerQueue.offer(current);
+        }
+    }
+}
+
+interface playerStatusObserver {
+    void update(playerState data);
+}
+
+interface playerStatusSubject {
+    void registerObserver(playerStatusObserver obj);
+    void removeObserver(playerStatusObserver obj);
+    void notifyObserver();
+}
+
+class playerState implements playerStatusSubject {
+    private User lastUpdated;
+    private int lastPos;
+    private final List&lt;playerStatusObserver&gt; playerstateObserver = new ArrayList&lt;&gt;();
+
+    @Override
+    public void registerObserver(playerStatusObserver obj) {
+        playerstateObserver.add(obj);
+    }
+
+    @Override
+    public void removeObserver(playerStatusObserver obj) {
+        playerstateObserver.remove(obj);
+    }
+
+    @Override
+    public void notifyObserver() {
+         for (playerStatusObserver obj : playerstateObserver){
+             obj.update(this);
+         }
+    }
+
+    public void updatePosition(int pos ,User user){
+        this.lastUpdated = user;
+        this.lastPos = pos;
+        user.setPosition(pos);
+        notifyObserver();
+    }
+
+    public User getLastUpdated(){
+        return lastUpdated;
+    }
+
+    public int getLastPos(){
+        return lastPos;
+    }
+}
+
+class Play {
+    private Rule Rule;
+    private Dice rollDice;
+    private User u;
+
+    Play(User u){
+        this.u = u;
+        this.rollDice = Dice.getInstance();
+        this.Rule = new Rule();
+    }
+
+    public boolean gameState(){
+        int face = rollDice.getNumber();
+        int currpos = u.getPosition() + face;
+        if(currpos &lt;= 100){
+            u.setPosition(currpos);
+            if (!Rule.checkRule(currpos)){
+                System.out.println(u.getUsername() + " WINS game");
+                return false;
+            }
+            return true;
+        } else {
+            System.out.println("Retry");
+            return true;
+        }
+    }
+}
+
+public class snake_and_ladder {
+    public snake_and_ladder(){
+        System.out.println("snake and ladder");
+        gameManager game = new gameManager(1);
+        game.simulate(2);
+    }
+
+    public static void main(String[] args) {
+        new snake_and_ladder();
+    }
+}</textarea>
+            <div class="compiler-actions">
+              <a class="cta secondary" href="https://onecompiler.com/java" target="_blank" rel="noreferrer">Open full compiler</a>
+            </div>
+          </article>
+
+          <article class="panel compiler-panel reveal">
+            <h3>Embedded Compiler</h3>
+            <iframe
+              class="compiler-frame"
+              title="Embedded Java Compiler"
+              src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true"
+              loading="lazy"
+              frameborder="0"></iframe>
+          </article>
+        </div>
+      </section>
+
+      <section class="section comparison">
+        <div class="section-heading">
+          <p class="eyebrow">Observer vs Polling</p>
+          <h2>Why observer is better here</h2>
+        </div>
+
+        <div class="compare-grid">
+          <article class="compare-card bad reveal">
+            <h3>Polling</h3>
+            <p>Every player or UI keeps checking for updates again and again, even when nothing happened. That wastes CPU cycles, creates noisy logic, and introduces delay between the move and the reaction.</p>
+          </article>
+          <article class="compare-card good reveal">
+            <h3>Observer</h3>
+            <p>The game pushes updates only when a move actually happens. That is more efficient, easier to test, and much closer to how real-time multiplayer events should work.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

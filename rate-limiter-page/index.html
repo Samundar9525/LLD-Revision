@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate limiter LLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span>Rate Limiter</span>
+        </div>
+        <div class="nav-group">
+          <button class="nav-pill button-pill" id="backButton" type="button">Back</button>
+          <a class="nav-pill" href="../index.html">Home</a>
+          <a class="nav-pill" href="#algorithms">Algorithms</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Logic Behind The Code</p>
+          <h1>Rate limiter LLD</h1>
+          <p class="hero-text">
+            A visual low-level design walkthrough of your rate limiter implementation, showing how
+            requests move through Fixed Window, Sliding Window, and Token Bucket under concurrent load.
+          </p>
+
+          <div class="hero-actions">
+            <a class="cta primary" href="#algorithms">See Algorithms</a>
+            <a class="cta secondary" href="#run-code">Run the code</a>
+          </div>
+
+          <div class="hero-metrics">
+            <article>
+              <strong>3</strong>
+              <span>Limiter algorithms</span>
+            </article>
+            <article>
+              <strong>10</strong>
+              <span>Worker threads</span>
+            </article>
+            <article>
+              <strong>Atomic + Lock</strong>
+              <span>Thread-safety tools</span>
+            </article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="status-dot"></span>
+              <span>Live request animation</span>
+            </div>
+
+            <div class="request-flow">
+              <div class="flow-column">
+                <span class="flow-label">Incoming request</span>
+                <div class="flow-stage">
+                  <div class="request-block incoming" id="incomingRequest">REQ 0012</div>
+                </div>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-column">
+                <span class="flow-label">Limiter check</span>
+                <div class="flow-stage">
+                  <div class="server-block" id="heroAlgorithm">Fixed Window</div>
+                </div>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-column">
+                <span class="flow-label">Decision</span>
+                <div class="flow-stage">
+                  <div class="request-block allowed" id="heroDecision">Allowed</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="turn-console">
+              <div class="console-row">
+                <span>Thread</span>
+                <strong id="heroThread">pool-1-thread-3</strong>
+              </div>
+              <div class="console-row">
+                <span>Request</span>
+                <strong id="heroRequest">REQ 0012</strong>
+              </div>
+              <div class="console-row">
+                <span>Status</span>
+                <strong id="heroStatus">Allowed</strong>
+              </div>
+              <div class="console-row">
+                <span>Reason</span>
+                <strong id="heroReason">within limit</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="logic">
+        <div class="section-heading">
+          <p class="eyebrow">Design Intent</p>
+          <h2>What your code is doing</h2>
+        </div>
+
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal">
+            <h3>Strategy Pattern</h3>
+            <p>The <code>RateLimiter</code> interface gives every limiter the same contract, so the client can call one method no matter which algorithm is being used.</p>
+          </article>
+          <article class="info-card accent-green reveal">
+            <h3>Factory-Friendly Structure</h3>
+            <p>Your comment is right: a factory method can later choose the limiter type, while the client stays unchanged and talks only to the interface.</p>
+          </article>
+          <article class="info-card accent-blue reveal">
+            <h3>Concurrent Simulation</h3>
+            <p>The client uses a worker pool, a blocking queue, and a notifier thread to simulate lots of requests and print results cleanly.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="contracts">
+        <div class="section-heading">
+          <p class="eyebrow">Interface Logic</p>
+          <h2>Why the interface and `@Override` matter</h2>
+        </div>
+
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal">
+            <h3>Why use the interface</h3>
+            <p><code>RateLimiter</code> defines one behavior: <code>isAllowRequest()</code>. That lets the client swap algorithms without changing the calling code.</p>
+          </article>
+          <article class="info-card accent-green reveal">
+            <h3>Why override the method</h3>
+            <p><code>@Override</code> tells the compiler that each class is implementing the interface contract correctly. It prevents signature mistakes and makes the code intention obvious.</p>
+          </article>
+          <article class="info-card accent-blue reveal">
+            <h3>Why this improves design</h3>
+            <p>If you add another limiter tomorrow, you only implement the same method in a new class and plug it into the system.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="thread-safety">
+        <div class="section-heading">
+          <p class="eyebrow">Thread Safety</p>
+          <h2>How the implementation stays safe under many threads</h2>
+        </div>
+
+        <div class="timeline">
+          <article class="timeline-step reveal">
+            <span class="step-number">01</span>
+            <div>
+              <h3>Fixed Window uses atomics</h3>
+              <p><code>AtomicInteger</code> updates the request counter safely and <code>AtomicLong</code> protects the current window start. <code>compareAndSet</code> ensures only one thread performs the reset.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">02</span>
+            <div>
+              <h3>Sliding Window uses a lock around the full decision</h3>
+              <p>Removing expired timestamps, checking the queue size, and adding a new timestamp must happen as one atomic action. The <code>ReentrantLock</code> protects that whole block.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">03</span>
+            <div>
+              <h3>Token Bucket uses a lock for refill plus consume</h3>
+              <p>Refill calculation and token consumption must happen together. Otherwise two threads might see the same token and both think they can use it.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">04</span>
+            <div>
+              <h3>The client uses safe concurrency primitives</h3>
+              <p><code>AtomicInteger</code> safely generates request IDs, <code>LinkedBlockingQueue</code> safely transfers events, and the executor handles multi-threaded task scheduling.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="contract-code">
+        <div class="section-heading">
+          <p class="eyebrow">Core Contract</p>
+          <h2>The shared interface and the multi-threaded client</h2>
+        </div>
+
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Interface</p>
+              <h3>One method, many strategies</h3>
+              <p>The whole design hangs on one shared contract. Every limiter overrides the same method, which is why the client can test all implementations uniformly.</p>
+              <pre><code>interface RateLimiter {
+    boolean isAllowRequest();
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Why this matters</div>
+              <div class="reason-card">The client does not care whether it is talking to Fixed Window, Sliding Window, or Token Bucket. It only cares that each one answers the same question: allow or reject?</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Client</p>
+              <h3>How the executor, queue, and printer work together</h3>
+              <p>The client creates all strategies, fires requests from a 10-thread pool, and sends results to a blocking queue so a printer thread can log them safely.</p>
+              <pre><code>RateLimiter fixed = new FixedWindowRateLimiter(5);
+RateLimiter sliding = new SlidingWindow(5);
+RateLimiter token = new TokenBucket(5, 2);
+
+ExecutorService exec = Executors.newFixedThreadPool(10);
+AtomicInteger requestId = new AtomicInteger(0);
+BlockingQueue&lt;RequestEvent&gt; queue = new LinkedBlockingQueue&lt;&gt;();
+
+Thread printer = new Thread(() -&gt; {
+    try {
+        while (!Thread.currentThread().isInterrupted()) {
+            RequestEvent ev = queue.poll(500, TimeUnit.MILLISECONDS);
+            if (ev == null) continue;
+            printEvent(ev);
+        }
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+}, "notifier-printer");</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Client behavior</div>
+              <div class="reason-card">The queue decouples request processing from logging. Workers keep generating decisions, while the printer thread formats output asynchronously.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="algorithms">
+        <div class="section-heading">
+          <p class="eyebrow">Algorithms</p>
+          <h2>Accurate request flow, explanation, and full snippet for each limiter</h2>
+        </div>
+
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Fixed Window</p>
+              <h3>Count requests inside a fixed one-second window</h3>
+              <p>
+                This limiter only cares about the current one-second bucket. If the request count stays below the threshold, the request is green and passes.
+                If the counter already crossed the threshold in the same time window, the request turns red because the fixed window is full.
+              </p>
+              <pre><code>class FixedWindowRateLimiter implements RateLimiter {
+    private final int threshold;
+    private static final long TIMELIMIT_MS = 1000L;
+    private final AtomicInteger counter = new AtomicInteger(0);
+    private final AtomicLong windowStartTime;
+
+    FixedWindowRateLimiter(int threshold){
+        this.threshold = threshold;
+        this.windowStartTime = new AtomicLong(System.currentTimeMillis());
+    }
+
+    @Override
+    public boolean isAllowRequest(){
+        long currTime = System.currentTimeMillis();
+        long startTime = this.windowStartTime.get();
+        if (currTime - startTime >= TIMELIMIT_MS) {
+            if (this.windowStartTime.compareAndSet(startTime, currTime)) {
+                counter.set(0);
+            }
+        }
+        return counter.incrementAndGet() <= threshold;
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Fixed Window request flow</div>
+              <div class="algorithm-flow">
+                <div class="algorithm-stage"><div class="request-block incoming" id="fixedIncoming">REQ F12</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="server-block small-block">1 sec window</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="request-block allowed" id="fixedDecision">Allowed</div></div>
+              </div>
+              <div class="reason-card" id="fixedReason">Reason: count within threshold</div>
+              <div class="fixed-window-track" id="fixedWindowTrack"></div>
+              <p class="visual-note">The slots show how full the current window is. Once the window is full, new requests are rejected until time resets the bucket.</p>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Sliding Window</p>
+              <h3>Keep only the recent timestamps</h3>
+              <p>
+                This limiter cleans out old requests first, then checks how many recent requests are still active. If the recent log is already full,
+                the request turns red because the sliding window capacity is exceeded.
+              </p>
+              <pre><code>class SlidingWindow implements RateLimiter {
+    private final int threshold;
+    private static final long REQUEST_LIMIT_MS = 1000L;
+
+    private final Queue&lt;Long&gt; logTable = new ConcurrentLinkedQueue&lt;&gt;();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    SlidingWindow(int threshold){
+        this.threshold = threshold;
+    }
+
+    @Override
+    public boolean isAllowRequest(){
+        long currentWindowTime = System.currentTimeMillis();
+        lock.lock();
+        try{
+            while (!logTable.isEmpty() &&
+                   currentWindowTime - logTable.peek() >= REQUEST_LIMIT_MS){
+                logTable.poll();
+            }
+
+            if(logTable.size() < threshold){
+                logTable.offer(currentWindowTime);
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+           lock.unlock();
+        }
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Sliding Window request flow</div>
+              <div class="algorithm-flow">
+                <div class="algorithm-stage"><div class="request-block incoming" id="slidingIncoming">REQ S21</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="server-block small-block">recent log</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="request-block allowed" id="slidingDecision">Allowed</div></div>
+              </div>
+              <div class="reason-card" id="slidingReason">Reason: recent log has room</div>
+              <div class="sliding-lane" id="slidingLane"></div>
+              <p class="visual-note">The chips are recent requests. When too many are still inside the active time range, the next request is rejected.</p>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Token Bucket</p>
+              <h3>Consume tokens and refill over time</h3>
+              <p>
+                This limiter allows bursts up to bucket capacity. A request stays green if a token exists. It turns red when the bucket is empty,
+                and the reason is simply that no tokens are available right now.
+              </p>
+              <pre><code>class TokenBucket implements RateLimiter {
+    private final int capacity;
+    private int tokens;
+    private final int refillRate;
+    private long lastRefillTime;
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    TokenBucket(int limit, int refillRate) {
+        this.capacity = limit;
+        this.tokens = limit;
+        this.refillRate = refillRate;
+        this.lastRefillTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public boolean isAllowRequest() {
+        lock.lock();
+        try {
+            long currTime = System.currentTimeMillis();
+
+            long timePassed = currTime - lastRefillTime;
+            int refill = (int) ((timePassed * refillRate) / 1000);
+
+            if (refill > 0) {
+                tokens = Math.min(capacity, tokens + refill);
+                lastRefillTime = currTime;
+            }
+
+            if (tokens > 0) {
+                tokens--;
+                return true;
+            } else {
+                return false;
+            }
+
+        } finally {
+            lock.unlock();
+        }
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Token Bucket request flow</div>
+              <div class="algorithm-flow">
+                <div class="algorithm-stage"><div class="request-block incoming" id="tokenIncoming">REQ T07</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="server-block small-block">token bucket</div></div>
+                <div class="flow-arrow small">-&gt;</div>
+                <div class="algorithm-stage"><div class="request-block allowed" id="tokenDecision">Allowed</div></div>
+              </div>
+              <div class="reason-card" id="tokenReason">Reason: token available</div>
+              <div class="token-bucket-box">
+                <div class="token-liquid" id="tokenLiquid"></div>
+                <div class="token-count" id="tokenCount">5 / 5</div>
+              </div>
+              <p class="visual-note">The liquid level shows available tokens. If the bucket reaches zero, the request is rejected until refill adds capacity again.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="client-flow">
+        <div class="section-heading">
+          <p class="eyebrow">Client Flow</p>
+          <h2>How your client runs the full multi-threaded simulation</h2>
+        </div>
+
+        <div class="timeline">
+          <article class="timeline-step reveal">
+            <span class="step-number">01</span>
+            <div>
+              <h3>Create three limiter strategies</h3>
+              <p>The client creates one fixed-window limiter, one sliding-window limiter, and one token-bucket limiter through the shared interface type.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">02</span>
+            <div>
+              <h3>Use a 10-thread executor</h3>
+              <p>Each worker repeatedly sends the same request through all three limiters, so the code tests how each algorithm behaves under pressure.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">03</span>
+            <div>
+              <h3>Queue printable events</h3>
+              <p>Every decision becomes a <code>RequestEvent</code> and is pushed into a <code>LinkedBlockingQueue</code>, which safely transfers the event to the printer thread.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">04</span>
+            <div>
+              <h3>Print results asynchronously</h3>
+              <p>The notifier thread prints allowed requests as one-line logs and rejected requests as detailed boxes with limiter, reason, thread, and timestamp.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading">
+          <p class="eyebrow">Run The Code</p>
+          <h2>Read it here, run it in the embedded Java compiler</h2>
+        </div>
+
+        <div class="compiler-layout">
+          <article class="panel code-panel reveal">
+            <div class="code-panel-header">
+              <h3>Java Source</h3>
+              <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+            </div>
+            <p class="compiler-note">
+              This static page stays GitHub Pages friendly. For the embedded compiler, the package line is removed so the main class can run directly.
+            </p>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.*;
+
+interface RateLimiter {
+    boolean isAllowRequest();
+}
+
+class FixedWindowRateLimiter implements RateLimiter {
+    private final int threshold;
+    private static final long TIMELIMIT_MS = 1000L;
+    private final AtomicInteger counter = new AtomicInteger(0);
+    private final AtomicLong windowStartTime;
+
+    FixedWindowRateLimiter(int threshold){
+        this.threshold = threshold;
+        this.windowStartTime = new AtomicLong(System.currentTimeMillis());
+    }
+
+    @Override
+    public boolean isAllowRequest(){
+        long currTime = System.currentTimeMillis();
+        long startTime = this.windowStartTime.get();
+        if (currTime - startTime >= TIMELIMIT_MS) {
+            if (this.windowStartTime.compareAndSet(startTime, currTime)) {
+                counter.set(0);
+            }
+        }
+        return counter.incrementAndGet() <= threshold;
+    }
+}
+
+class SlidingWindow implements RateLimiter {
+    private final int threshold;
+    private static final long REQUEST_LIMIT_MS = 1000L;
+
+    private final Queue<Long> logTable = new ConcurrentLinkedQueue<>();
+    private final ReentrantLock lock = new ReentrantLock();
+
+    SlidingWindow(int threshold){
+        this.threshold = threshold;
+    }
+
+    @Override
+    public boolean isAllowRequest(){
+        long currentWindowTime = System.currentTimeMillis();
+        lock.lock();
+        try{
+            while (!logTable.isEmpty()  && currentWindowTime - logTable.peek() >= REQUEST_LIMIT_MS){
+                logTable.poll();
+            }
+
+            if(logTable.size()<threshold){
+                logTable.offer(currentWindowTime);
+                return true;
+            }else {
+                return false;
+            }
+        } finally {
+           lock.unlock();
+        }
+    }
+}
+
+class TokenBucket implements RateLimiter {
+
+    private final int capacity;
+    private int tokens;
+    private final int refillRate;
+    private long lastRefillTime;
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    TokenBucket(int limit, int refillRate) {
+        this.capacity = limit;
+        this.tokens = limit;
+        this.refillRate = refillRate;
+        this.lastRefillTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public boolean isAllowRequest() {
+        lock.lock();
+        try {
+            long currTime = System.currentTimeMillis();
+
+            long timePassed = currTime - lastRefillTime;
+            int refill = (int) ((timePassed * refillRate) / 1000);
+
+            if (refill > 0) {
+                tokens = Math.min(capacity, tokens + refill);
+                lastRefillTime = currTime;
+            }
+
+            if (tokens > 0) {
+                tokens--;
+                return true;
+            } else {
+                return false;
+            }
+
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+public class RateLimiterClient {
+    public RateLimiterClient() {
+        System.out.println("=== Rate Limiter Client ===");
+        System.out.println("Running multi-threaded simulation...\n");
+        multiThreadTest();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("=== Rate Limiter Client ===");
+        multiThreadTest();
+    }
+
+    private static void multiThreadTest() {
+        RateLimiter fixed = new FixedWindowRateLimiter(5);
+        RateLimiter sliding = new SlidingWindow(5);
+        RateLimiter token = new TokenBucket(5, 2);
+
+        ExecutorService exec = Executors.newFixedThreadPool(10);
+        AtomicInteger requestId = new AtomicInteger(0);
+
+        BlockingQueue<RequestEvent> queue = new LinkedBlockingQueue<>();
+
+        Thread printer = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    RequestEvent ev = queue.poll(500, TimeUnit.MILLISECONDS);
+                    if (ev == null) continue;
+                    printEvent(ev);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "notifier-printer");
+
+        printer.start();
+
+        Runnable task = () -> {
+            String threadName = Thread.currentThread().getName();
+            for (int i = 0; i < 20; i++) {
+                int id = requestId.incrementAndGet();
+
+                boolean f = fixed.isAllowRequest();
+                queue.offer(new RequestEvent(id, "FIXED", f, f ? null : "window threshold reached", threadName, System.currentTimeMillis()));
+
+                boolean s = sliding.isAllowRequest();
+                queue.offer(new RequestEvent(id, "SLIDING", s, s ? null : "sliding window capacity exceeded", threadName, System.currentTimeMillis()));
+
+                boolean t = token.isAllowRequest();
+                queue.offer(new RequestEvent(id, "TOKEN", t, t ? null : "no tokens available", threadName, System.currentTimeMillis()));
+
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        };
+
+        for (int i = 0; i < 10; i++) {
+            exec.submit(task);
+        }
+
+        exec.shutdown();
+        try {
+            exec.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        while (!queue.isEmpty()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        printer.interrupt();
+        try {
+            printer.join(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static void printEvent(RequestEvent ev) {
+        if (ev.allowed) {
+            System.out.printf("[REQ %04d] %s allowed by %s\n", ev.id, ev.limiter, ev.threadName);
+        } else {
+            System.out.println("+------------------------------------------------+");
+            System.out.printf("| REQ %04d REJECTED by %-14s |\n", ev.id, ev.threadName);
+            System.out.printf("| Limiter: %-33s |\n", ev.limiter);
+            System.out.printf("| Reason: %-35s |\n", ev.reason);
+            System.out.printf("| Time: %d |\n", ev.timestamp);
+            System.out.println("+------------------------------------------------+");
+        }
+    }
+
+    private static class RequestEvent {
+        final int id;
+        final String limiter;
+        final boolean allowed;
+        final String reason;
+        final String threadName;
+        final long timestamp;
+
+        RequestEvent(int id, String limiter, boolean allowed, String reason, String threadName, long timestamp) {
+            this.id = id;
+            this.limiter = limiter;
+            this.allowed = allowed;
+            this.reason = reason;
+            this.threadName = threadName;
+            this.timestamp = timestamp;
+        }
+    }
+}</textarea>
+            <div class="compiler-actions">
+              <a class="cta secondary" href="https://onecompiler.com/java" target="_blank" rel="noreferrer">Open full compiler</a>
+            </div>
+          </article>
+
+          <article class="panel compiler-panel reveal">
+            <h3>Embedded Compiler</h3>
+            <iframe
+              class="compiler-frame"
+              title="Embedded Java Compiler"
+              src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true"
+              loading="lazy"
+              frameborder="0"></iframe>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

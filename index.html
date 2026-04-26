@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLD Designs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #221b18;
+      --muted: #675a53;
+      --accent: #df6d2d;
+      --accent-2: #1f7a5c;
+      --accent-3: #1773b0;
+      --panel: rgba(255, 250, 244, 0.78);
+      --panel-strong: rgba(255, 252, 247, 0.9);
+      --shadow: 0 24px 70px rgba(109, 60, 23, 0.14);
+      --line: rgba(34, 27, 24, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 205, 130, 0.65), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(63, 173, 122, 0.18), transparent 25%),
+        linear-gradient(180deg, #fff9f2 0%, #f7efe4 36%, #f5e7d6 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(rgba(34, 27, 24, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 27, 24, 0.02) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 72px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 52px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #f2b84b);
+      box-shadow: 0 0 0 8px rgba(223, 109, 45, 0.12);
+    }
+
+    .hero {
+      min-height: calc(100vh - 92px);
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.82rem;
+      color: var(--accent-2);
+      font-weight: 800;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      font-family: "DM Serif Display", serif;
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 6vw, 5.4rem);
+      max-width: 8ch;
+    }
+
+    .hero-copy p,
+    .pattern-text p,
+    .section-lead {
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 1.04rem;
+    }
+
+    .hero-copy p {
+      max-width: 62ch;
+      margin: 22px 0 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .card,
+    .pattern-card,
+    .panel,
+    .problem-card {
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.44);
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      padding: 24px;
+      border-radius: 26px;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 75px rgba(109, 60, 23, 0.18);
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+
+    .card p { margin: 0; }
+
+    .card-tag {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .preview {
+      position: relative;
+      min-height: 560px;
+      border-radius: 34px;
+      background: rgba(34, 27, 24, 0.96);
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(34, 27, 24, 0.26);
+      padding: 22px;
+      color: #fffaf3;
+    }
+
+    .preview::before {
+      content: "";
+      position: absolute;
+      inset: auto -12% -18% auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(242, 184, 75, 0.2), transparent 70%);
+    }
+
+    .preview-head {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .preview-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 250, 243, 0.78);
+      font-size: 0.92rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #5df2a5;
+      box-shadow: 0 0 18px rgba(93, 242, 165, 0.7);
+    }
+
+    .pattern-network {
+      position: relative;
+      z-index: 1;
+      min-height: 430px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      padding: 22px;
+    }
+
+    .network-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 140px;
+      height: 140px;
+      margin-left: -70px;
+      margin-top: -70px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(243, 192, 96, 0.96), rgba(223, 109, 45, 0.9));
+      color: #2a211d;
+      box-shadow: 0 18px 32px rgba(223, 109, 45, 0.25);
+      animation: pulseCore 3.2s ease-in-out infinite;
+    }
+
+    .network-node {
+      position: absolute;
+      width: 118px;
+      height: 72px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.92);
+      color: #251e1a;
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.12);
+      transition: transform 240ms ease;
+    }
+
+    .network-node.green {
+      background: linear-gradient(135deg, rgba(197, 255, 225, 0.98), rgba(38, 162, 121, 0.82));
+      color: #f5fff9;
+    }
+
+    .network-node.blue {
+      background: linear-gradient(135deg, rgba(208, 235, 255, 0.98), rgba(23, 115, 176, 0.84));
+      color: #f6fbff;
+    }
+
+    .network-node.red {
+      background: linear-gradient(135deg, rgba(255, 216, 205, 0.98), rgba(222, 110, 81, 0.84));
+      color: #fff8f4;
+    }
+
+    .node-facade { top: 26px; left: 50%; margin-left: -59px; }
+    .node-strategy { top: 50%; left: 18px; margin-top: -36px; }
+    .node-observer { top: 50%; right: 18px; margin-top: -36px; }
+    .node-builder { bottom: 22px; left: 50%; margin-left: -59px; }
+
+    .connector {
+      position: absolute;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.55), rgba(255,255,255,0.08));
+      border-radius: 999px;
+      transform-origin: center;
+      animation: glowLine 2.8s ease-in-out infinite;
+    }
+
+    .connector.top { width: 8px; height: 110px; left: 50%; margin-left: -4px; top: 92px; }
+    .connector.bottom { width: 8px; height: 108px; left: 50%; margin-left: -4px; bottom: 92px; }
+    .connector.left { width: 128px; height: 8px; left: 132px; top: 50%; margin-top: -4px; }
+    .connector.right { width: 128px; height: 8px; right: 132px; top: 50%; margin-top: -4px; }
+
+    .network-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 16px;
+      color: rgba(255, 250, 243, 0.75);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .section {
+      padding-top: 56px;
+    }
+
+    .section-title {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      max-width: 10ch;
+      margin-bottom: 10px;
+    }
+
+    .patterns {
+      display: grid;
+      gap: 20px;
+      margin-top: 26px;
+    }
+
+    .pattern-card {
+      border-radius: 28px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 22px;
+    }
+
+    .pattern-text h3 {
+      margin: 0 0 10px;
+      font-size: 1.36rem;
+    }
+
+    .pattern-tag {
+      margin: 0 0 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-2);
+    }
+
+    .pattern-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .problem-card {
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .problem-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .problem-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .codebox {
+      border-radius: 22px;
+      background: rgba(34, 27, 24, 0.96);
+      color: #fff7ee;
+      padding: 18px;
+      overflow-x: auto;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .codebox pre {
+      margin: 0;
+      font-family: "Courier New", monospace;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes pulseCore {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes glowLine {
+      0%, 100% { opacity: 0.28; }
+      50% { opacity: 0.9; }
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .pattern-card {
+        grid-template-columns: 1fr;
+      }
+
+      .hero { min-height: auto; }
+      .network-node { position: static; width: 100%; height: auto; min-height: 64px; margin: 0; }
+      .network-core { position: static; width: 100%; height: auto; min-height: 80px; margin: 0 0 12px; }
+      .connector { display: none; }
+      .pattern-network {
+        min-height: auto;
+        display: grid;
+        gap: 12px;
+      }
+      .network-caption {
+        position: static;
+        margin-top: 8px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 18px, 1160px); }
+      .topbar { margin-bottom: 30px; }
+      h1 { font-size: 2.7rem; }
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span>LLD Designs</span>
+      </div>
+    </nav>
+
+    <main class="hero">
+      <section class="hero-copy">
+        <p class="eyebrow">Design Explorer</p>
+        <h1>LLD Designs</h1>
+        <p>
+          A small library of low-level design walkthrough pages. It now also works as a design-pattern guide,
+          so you can see not just the final LLD examples, but also the ideas that shape their structure.
+        </p>
+
+        <div class="hero-grid">
+          <a class="card" href="./snake-logic-page/index.html">
+            <span class="card-tag">Interactive Walkthrough</span>
+            <h2>Snake and ladder LLD</h2>
+            <p>Facade, observer, queue-based turn flow, board rules, and an embedded compiler for the Java implementation.</p>
+          </a>
+
+          <a class="card" href="./rate-limiter-page/index.html">
+            <span class="card-tag">Interactive Walkthrough</span>
+            <h2>Rate limiter LLD</h2>
+            <p>Strategy-driven limiter design, thread-safe algorithms, code explanation, request animation, and a compiler section.</p>
+          </a>
+        </div>
+      </section>
+
+      <aside class="preview">
+        <div class="preview-head">
+          <div class="preview-status">
+            <span class="dot"></span>
+            <span>Animated pattern map</span>
+          </div>
+        </div>
+
+        <div class="pattern-network">
+          <div class="connector top"></div>
+          <div class="connector left"></div>
+          <div class="connector right"></div>
+          <div class="connector bottom"></div>
+
+          <div class="network-node green node-facade">Facade</div>
+          <div class="network-node blue node-strategy">Strategy</div>
+          <div class="network-core">LLD<br>Design Hub</div>
+          <div class="network-node red node-observer">Observer</div>
+          <div class="network-node node-builder">Builder</div>
+
+          <div class="network-caption">
+            These patterns solve different problems: simplifying entry points, swapping behavior, reacting to events,
+            and managing complex object creation.
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="section">
+      <p class="eyebrow">Pattern Guide</p>
+      <h2 class="section-title">What these design patterns are solving</h2>
+      <p class="section-lead">
+        The goal is not to use patterns for style points. Each one solves a specific design pain:
+        too much coupling, hard-coded behavior, noisy update flow, or difficult object construction.
+      </p>
+
+      <div class="patterns">
+        <article class="pattern-card reveal">
+          <div class="pattern-text">
+            <p class="pattern-tag">Facade</p>
+            <h3>Give the system one clean entry point</h3>
+            <p>Facade hides internal complexity behind a smaller public API. In your Snake and Ladder example, <code>gameManager</code> acts as the coordinator so callers do not have to manually manage board setup, dice logic, rule checks, and player rotation.</p>
+            <div class="pattern-grid">
+              <div class="problem-card">
+                <strong>Why we use it</strong>
+                <p>It reduces the number of things the client has to know before it can use the system.</p>
+              </div>
+              <div class="problem-card">
+                <strong>Problem it solves</strong>
+                <p>Without it, the client becomes tightly coupled to too many low-level classes and the setup logic leaks everywhere.</p>
+              </div>
+            </div>
+          </div>
+          <div class="codebox">
+            <pre>class gameManager {
+    Queue&lt;User&gt; playerQueue = new ArrayDeque&lt;&gt;();
+    Board board;
+    Play play;
+
+    public gameManager(int boardId) {
+        initBoard(boardId);
+    }
+
+    public void simulate(int playersCount) {
+        // setup players
+        // run the play loop
+        // check winner
+    }
+}</pre>
+          </div>
+        </article>
+
+        <article class="pattern-card reveal">
+          <div class="pattern-text">
+            <p class="pattern-tag">Strategy</p>
+            <h3>Swap algorithms without changing the client</h3>
+            <p>Strategy isolates multiple behaviors behind one shared contract. In your Rate Limiter code, <code>FixedWindowRateLimiter</code>, <code>SlidingWindow</code>, and <code>TokenBucket</code> all implement the same <code>RateLimiter</code> interface.</p>
+            <div class="pattern-grid">
+              <div class="problem-card">
+                <strong>Why we use it</strong>
+                <p>It lets the client call the same method while changing the actual algorithm underneath.</p>
+              </div>
+              <div class="problem-card">
+                <strong>Problem it solves</strong>
+                <p>Without strategy, the client ends up with large <code>if/else</code> trees and hard-coded limiter logic that becomes difficult to extend.</p>
+              </div>
+            </div>
+          </div>
+          <div class="codebox">
+            <pre>interface RateLimiter {
+    boolean isAllowRequest();
+}
+
+class FixedWindowRateLimiter implements RateLimiter {
+    @Override
+    public boolean isAllowRequest() { ... }
+}
+
+class TokenBucket implements RateLimiter {
+    @Override
+    public boolean isAllowRequest() { ... }
+}</pre>
+          </div>
+        </article>
+
+        <article class="pattern-card reveal">
+          <div class="pattern-text">
+            <p class="pattern-tag">Observer</p>
+            <h3>Notify interested objects when state changes</h3>
+            <p>Observer is useful when one change should automatically inform many listeners. In Snake and Ladder, <code>playerState</code> notifies all registered players when somebody moves, instead of making each player keep checking manually.</p>
+            <div class="pattern-grid">
+              <div class="problem-card">
+                <strong>Why we use it</strong>
+                <p>It keeps the system event-driven and real-time, which is cleaner than repeated polling.</p>
+              </div>
+              <div class="problem-card">
+                <strong>Problem it solves</strong>
+                <p>Without observer, listeners must keep asking "did anything change yet?", which is inefficient and harder to test.</p>
+              </div>
+            </div>
+          </div>
+          <div class="codebox">
+            <pre>interface playerStatusObserver {
+    void update(playerState data);
+}
+
+class playerState implements playerStatusSubject {
+    private final List&lt;playerStatusObserver&gt; observers = new ArrayList&lt;&gt;();
+
+    public void updatePosition(int pos, User user) {
+        this.lastUpdated = user;
+        this.lastPos = pos;
+        notifyObserver();
+    }
+}</pre>
+          </div>
+        </article>
+
+        <article class="pattern-card reveal">
+          <div class="pattern-text">
+            <p class="pattern-tag">Builder</p>
+            <h3>Make complex object creation easier to manage</h3>
+            <p>You mentioned builders as a next step for custom boards or richer user setup. Builder is useful when object creation starts getting too many optional choices or too many constructor arguments.</p>
+            <div class="pattern-grid">
+              <div class="problem-card">
+                <strong>Why we use it</strong>
+                <p>It makes object creation readable when the configuration becomes more complex.</p>
+              </div>
+              <div class="problem-card">
+                <strong>Problem it solves</strong>
+                <p>Without builder, constructors become hard to read, hard to extend, and easy to misuse when there are many optional fields.</p>
+              </div>
+            </div>
+          </div>
+          <div class="codebox">
+            <pre>class BoardBuilder {
+    private final Board board = new Board();
+
+    public BoardBuilder withSnake(int from, int offset) { ... }
+    public BoardBuilder withLadder(int from, int offset) { ... }
+    public Board build() { return board; }
+}</pre>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll(".reveal").forEach((item) => observer.observe(item));
+  </script>
+</body>
+</html>
