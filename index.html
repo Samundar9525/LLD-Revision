@@ -14,10 +14,10 @@
       --accent: #df6d2d;
       --accent-2: #1f7a5c;
       --accent-3: #1773b0;
-      --panel: rgba(255, 250, 244, 0.78);
-      --panel-strong: rgba(255, 252, 247, 0.9);
-      --shadow: 0 24px 70px rgba(109, 60, 23, 0.14);
+      --panel: rgba(255, 250, 244, 0.8);
+      --panel-strong: rgba(255, 252, 247, 0.92);
       --line: rgba(34, 27, 24, 0.08);
+      --shadow: 0 24px 70px rgba(109, 60, 23, 0.14);
     }
 
     * { box-sizing: border-box; }
@@ -46,7 +46,7 @@
     }
 
     .shell {
-      width: min(1160px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
       padding: 28px 0 72px;
       position: relative;
@@ -92,8 +92,7 @@
       font-weight: 800;
     }
 
-    h1,
-    h2 {
+    h1, h2, h3 {
       margin: 0;
       font-family: "DM Serif Display", serif;
       line-height: 0.98;
@@ -106,8 +105,8 @@
     }
 
     .hero-copy p,
-    .pattern-text p,
-    .section-lead {
+    .section-lead,
+    .pattern-card p {
       color: var(--muted);
       line-height: 1.75;
       font-size: 1.04rem;
@@ -127,8 +126,7 @@
 
     .card,
     .pattern-card,
-    .panel,
-    .problem-card {
+    .category-panel {
       background: var(--panel);
       backdrop-filter: blur(18px);
       border: 1px solid rgba(255, 255, 255, 0.44);
@@ -214,47 +212,42 @@
     .pattern-network {
       position: relative;
       z-index: 1;
-      min-height: 430px;
       border-radius: 26px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      overflow: hidden;
       padding: 22px;
+      display: grid;
+      gap: 18px;
     }
 
-    .network-core {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 140px;
-      height: 140px;
-      margin-left: -70px;
-      margin-top: -70px;
-      border-radius: 28px;
+    .network-grid {
+      position: relative;
+      min-height: 280px;
       display: grid;
-      place-items: center;
-      text-align: center;
-      font-weight: 800;
-      background: linear-gradient(135deg, rgba(243, 192, 96, 0.96), rgba(223, 109, 45, 0.9));
-      color: #2a211d;
-      box-shadow: 0 18px 32px rgba(223, 109, 45, 0.25);
-      animation: pulseCore 3.2s ease-in-out infinite;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: center;
+      justify-items: center;
     }
 
     .network-node {
-      position: absolute;
-      width: 118px;
-      height: 72px;
-      border-radius: 20px;
+      width: 130px;
+      min-height: 78px;
+      border-radius: 22px;
       display: grid;
       place-items: center;
       text-align: center;
+      padding: 10px;
       font-weight: 800;
-      background: rgba(255, 255, 255, 0.92);
-      color: #251e1a;
       box-shadow: 0 16px 28px rgba(0, 0, 0, 0.12);
-      transition: transform 240ms ease;
+      animation: bob 3.2s ease-in-out infinite;
     }
+
+    .network-node:nth-child(2) { animation-delay: 0.3s; }
+    .network-node:nth-child(3) { animation-delay: 0.6s; }
+    .network-node:nth-child(4) { animation-delay: 0.9s; }
+    .network-node:nth-child(5) { animation-delay: 1.2s; }
+    .network-node:nth-child(6) { animation-delay: 1.5s; }
 
     .network-node.green {
       background: linear-gradient(135deg, rgba(197, 255, 225, 0.98), rgba(38, 162, 121, 0.82));
@@ -271,113 +264,237 @@
       color: #fff8f4;
     }
 
-    .node-facade { top: 26px; left: 50%; margin-left: -59px; }
-    .node-strategy { top: 50%; left: 18px; margin-top: -36px; }
-    .node-observer { top: 50%; right: 18px; margin-top: -36px; }
-    .node-builder { bottom: 22px; left: 50%; margin-left: -59px; }
+    .network-node.orange {
+      background: linear-gradient(135deg, rgba(255, 226, 170, 0.98), rgba(223, 109, 45, 0.88));
+      color: #2a211d;
+    }
 
-    .connector {
+    .network-node.white {
+      background: rgba(255, 255, 255, 0.92);
+      color: #251e1a;
+    }
+
+    .network-center {
+      width: 150px;
+      min-height: 100px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 10px;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(243, 192, 96, 0.96), rgba(223, 109, 45, 0.9));
+      color: #2a211d;
+      box-shadow: 0 18px 32px rgba(223, 109, 45, 0.25);
+      animation: pulseCore 3.2s ease-in-out infinite;
+      grid-column: 2;
+      grid-row: 2;
+      z-index: 2;
+    }
+
+    .network-line {
       position: absolute;
-      background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.55), rgba(255,255,255,0.08));
+      background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.6), rgba(255,255,255,0.1));
       border-radius: 999px;
-      transform-origin: center;
       animation: glowLine 2.8s ease-in-out infinite;
     }
 
-    .connector.top { width: 8px; height: 110px; left: 50%; margin-left: -4px; top: 92px; }
-    .connector.bottom { width: 8px; height: 108px; left: 50%; margin-left: -4px; bottom: 92px; }
-    .connector.left { width: 128px; height: 8px; left: 132px; top: 50%; margin-top: -4px; }
-    .connector.right { width: 128px; height: 8px; right: 132px; top: 50%; margin-top: -4px; }
+    .line-h {
+      height: 8px;
+      width: 180px;
+      left: 50%;
+      margin-left: -90px;
+      top: 50%;
+      margin-top: -4px;
+    }
+
+    .line-v {
+      width: 8px;
+      height: 180px;
+      left: 50%;
+      margin-left: -4px;
+      top: 50%;
+      margin-top: -90px;
+    }
 
     .network-caption {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 16px;
-      color: rgba(255, 250, 243, 0.75);
-      font-size: 0.92rem;
-      line-height: 1.55;
+      color: rgba(255, 250, 243, 0.78);
+      font-size: 0.95rem;
+      line-height: 1.6;
     }
 
     .section {
-      padding-top: 56px;
+      padding-top: 58px;
     }
 
     .section-title {
       font-size: clamp(2.2rem, 5vw, 4rem);
-      max-width: 10ch;
+      max-width: 16ch;
+      line-height: 1.02;
       margin-bottom: 10px;
     }
 
-    .patterns {
+    .catalog {
       display: grid;
-      gap: 20px;
-      margin-top: 26px;
+      gap: 24px;
+      margin-top: 28px;
     }
 
-    .pattern-card {
+    .category-panel {
       border-radius: 28px;
       padding: 24px;
-      display: grid;
-      grid-template-columns: 0.95fr 1.05fr;
-      gap: 22px;
     }
 
-    .pattern-text h3 {
-      margin: 0 0 10px;
-      font-size: 1.36rem;
+    .category-head {
+      margin-bottom: 18px;
     }
 
-    .pattern-tag {
-      margin: 0 0 10px;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent-2);
+    .category-head h3 {
+      font-size: 1.45rem;
+      margin-bottom: 8px;
+    }
+
+    .category-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
     }
 
     .pattern-grid {
       display: grid;
-      gap: 12px;
-      margin-top: 18px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
     }
 
-    .problem-card {
-      border-radius: 18px;
-      padding: 14px 16px;
-      background: var(--panel-strong);
-      border: 1px solid var(--line);
-    }
-
-    .problem-card strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 0.95rem;
-    }
-
-    .problem-card p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.6;
-      font-size: 0.95rem;
-    }
-
-    .codebox {
+    .pattern-card {
       border-radius: 22px;
+      padding: 18px;
+    }
+
+    .pattern-label {
+      margin: 0 0 8px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+
+    .pattern-card h4 {
+      margin: 0 0 10px;
+      font-size: 1.16rem;
+      font-family: "DM Serif Display", serif;
+    }
+
+    .pattern-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.97rem;
+    }
+
+    .pattern-code {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
       background: rgba(34, 27, 24, 0.96);
       color: #fff7ee;
-      padding: 18px;
-      overflow-x: auto;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      font-family: "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      position: relative;
+      overflow: hidden;
     }
 
-    .codebox pre {
-      margin: 0;
-      font-family: "Courier New", monospace;
-      font-size: 0.92rem;
-      line-height: 1.6;
+    .pattern-code::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.08) 40%, transparent 80%);
+      transform: translateX(-100%);
+      animation: codeSweep 3.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .pattern-code code {
+      position: relative;
+      z-index: 1;
       white-space: pre-wrap;
+      display: block;
+    }
+
+    .compare-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .compare-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .compare-label.bad {
+      color: #c65b54;
+    }
+
+    .compare-label.good {
+      color: #2d9c6d;
+    }
+
+    .compare-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .compare-label.bad .compare-dot {
+      background: #d96c62;
+    }
+
+    .compare-label.good .compare-dot {
+      background: #39bc82;
+    }
+
+    .pattern-code.bad {
+      background: rgba(58, 31, 29, 0.98);
+    }
+
+    .pattern-code.good {
+      background: rgba(25, 46, 38, 0.98);
+    }
+
+    .pattern-code.bad::before {
+      background: linear-gradient(120deg, transparent 0%, rgba(255,130,120,0.08) 40%, transparent 80%);
+    }
+
+    .pattern-code.good::before {
+      background: linear-gradient(120deg, transparent 0%, rgba(120,255,190,0.08) 40%, transparent 80%);
+    }
+
+    .mini-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mini-meta div {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      font-size: 0.93rem;
+      line-height: 1.55;
+    }
+
+    .mini-meta strong {
+      color: var(--ink);
     }
 
     .reveal {
@@ -401,32 +518,49 @@
       50% { opacity: 0.9; }
     }
 
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes codeSweep {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(110%); }
+    }
+
     @media (max-width: 980px) {
       .hero,
-      .pattern-card {
+      .pattern-grid {
         grid-template-columns: 1fr;
       }
 
       .hero { min-height: auto; }
-      .network-node { position: static; width: 100%; height: auto; min-height: 64px; margin: 0; }
-      .network-core { position: static; width: 100%; height: auto; min-height: 80px; margin: 0 0 12px; }
-      .connector { display: none; }
-      .pattern-network {
+      .network-grid {
+        grid-template-columns: repeat(2, 1fr);
         min-height: auto;
-        display: grid;
-        gap: 12px;
       }
-      .network-caption {
-        position: static;
-        margin-top: 8px;
+      .network-center {
+        grid-column: 1 / -1;
+        grid-row: auto;
       }
+      .network-line { display: none; }
     }
 
     @media (max-width: 720px) {
-      .shell { width: min(100% - 18px, 1160px); }
+      .shell { width: min(100% - 18px, 1180px); }
       .topbar { margin-bottom: 30px; }
       h1 { font-size: 2.7rem; }
-      .hero-grid { grid-template-columns: 1fr; }
+      .hero-grid,
+      .pattern-grid {
+        grid-template-columns: 1fr;
+      }
+      .network-node,
+      .network-center {
+        width: 100%;
+      }
+      .network-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -444,21 +578,21 @@
         <p class="eyebrow">Design Explorer</p>
         <h1>LLD Designs</h1>
         <p>
-          A small library of low-level design walkthrough pages. It now also works as a design-pattern guide,
-          so you can see not just the final LLD examples, but also the ideas that shape their structure.
+          A small library of low-level design walkthrough pages and a generic design-pattern guide.
+          This page explains the patterns in a reusable way, with simple real-world examples rather than project-specific code.
         </p>
 
         <div class="hero-grid">
           <a class="card" href="./snake-logic-page/index.html">
             <span class="card-tag">Interactive Walkthrough</span>
             <h2>Snake and ladder LLD</h2>
-            <p>Facade, observer, queue-based turn flow, board rules, and an embedded compiler for the Java implementation.</p>
+            <p>Board rules, player flow, design choices, and a runnable Java walkthrough.</p>
           </a>
 
           <a class="card" href="./rate-limiter-page/index.html">
             <span class="card-tag">Interactive Walkthrough</span>
             <h2>Rate limiter LLD</h2>
-            <p>Strategy-driven limiter design, thread-safe algorithms, code explanation, request animation, and a compiler section.</p>
+            <p>Fixed window, sliding window, token bucket, code explanation, and a compiler section.</p>
           </a>
         </div>
       </section>
@@ -472,20 +606,21 @@
         </div>
 
         <div class="pattern-network">
-          <div class="connector top"></div>
-          <div class="connector left"></div>
-          <div class="connector right"></div>
-          <div class="connector bottom"></div>
+          <div class="network-grid">
+            <div class="network-line line-h"></div>
+            <div class="network-line line-v"></div>
 
-          <div class="network-node green node-facade">Facade</div>
-          <div class="network-node blue node-strategy">Strategy</div>
-          <div class="network-core">LLD<br>Design Hub</div>
-          <div class="network-node red node-observer">Observer</div>
-          <div class="network-node node-builder">Builder</div>
+            <div class="network-node green">Facade</div>
+            <div class="network-center">Design<br>Patterns</div>
+            <div class="network-node blue">Strategy</div>
+            <div class="network-node red">Observer</div>
+            <div class="network-node orange">Factory</div>
+            <div class="network-node white">Builder</div>
+          </div>
 
           <div class="network-caption">
-            These patterns solve different problems: simplifying entry points, swapping behavior, reacting to events,
-            and managing complex object creation.
+            Patterns are small design tools. You use them when a recurring software problem appears:
+            complex setup, behavior switching, event notifications, object creation, or integration boundaries.
           </div>
         </div>
       </aside>
@@ -493,138 +628,339 @@
 
     <section class="section">
       <p class="eyebrow">Pattern Guide</p>
-      <h2 class="section-title">What these design patterns are solving</h2>
+      <h2 class="section-title">Generic design patterns with examples and purpose</h2>
       <p class="section-lead">
-        The goal is not to use patterns for style points. Each one solves a specific design pain:
-        too much coupling, hard-coded behavior, noisy update flow, or difficult object construction.
+        These examples are intentionally generic. They are not tied to Snake and Ladder or Rate Limiter.
+        The idea is to show what each pattern looks like, why we choose it, and what pain it removes.
       </p>
 
-      <div class="patterns">
-        <article class="pattern-card reveal">
-          <div class="pattern-text">
-            <p class="pattern-tag">Facade</p>
-            <h3>Give the system one clean entry point</h3>
-            <p>Facade hides internal complexity behind a smaller public API. In your Snake and Ladder example, <code>gameManager</code> acts as the coordinator so callers do not have to manually manage board setup, dice logic, rule checks, and player rotation.</p>
-            <div class="pattern-grid">
-              <div class="problem-card">
-                <strong>Why we use it</strong>
-                <p>It reduces the number of things the client has to know before it can use the system.</p>
+      <div class="catalog">
+        <article class="category-panel reveal">
+          <div class="category-head">
+            <h3>Creational Patterns</h3>
+            <p>These patterns help when object creation becomes repetitive, complex, or dependent on runtime choices.</p>
+          </div>
+          <div class="pattern-grid">
+            <div class="pattern-card">
+              <p class="pattern-label">Singleton</p>
+              <h4>One shared instance</h4>
+              <p>Real-world example: one application-wide logger or configuration manager.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>Logger a = new Logger();
+Logger b = new Logger();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Singleton</div>
+                  <div class="pattern-code good"><code>class Logger {
+  static Logger getInstance() { ... }
+}
+Logger logger = Logger.getInstance();</code></div>
+                </div>
               </div>
-              <div class="problem-card">
-                <strong>Problem it solves</strong>
-                <p>Without it, the client becomes tightly coupled to too many low-level classes and the setup logic leaks everywhere.</p>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when the system should have exactly one shared instance.</div>
+                <div><strong>Problem it solves:</strong> avoids duplicate global state and inconsistent shared resources.</div>
               </div>
             </div>
-          </div>
-          <div class="codebox">
-            <pre>class gameManager {
-    Queue&lt;User&gt; playerQueue = new ArrayDeque&lt;&gt;();
-    Board board;
-    Play play;
 
-    public gameManager(int boardId) {
-        initBoard(boardId);
-    }
+            <div class="pattern-card">
+              <p class="pattern-label">Factory Method</p>
+              <h4>Create objects through a chooser</h4>
+              <p>Real-world example: return `EmailNotifier` or `SmsNotifier` based on user settings.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>if (type == "sms") notifier = new SmsNotifier();
+else notifier = new EmailNotifier();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Factory</div>
+                  <div class="pattern-code good"><code>Notifier makeNotifier(type) {
+  return type == "sms" ? new SmsNotifier() : new EmailNotifier();
+}</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when the exact class should be chosen at runtime.</div>
+                <div><strong>Problem it solves:</strong> removes large constructor selection logic from the client.</div>
+              </div>
+            </div>
 
-    public void simulate(int playersCount) {
-        // setup players
-        // run the play loop
-        // check winner
-    }
-}</pre>
+            <div class="pattern-card">
+              <p class="pattern-label">Builder</p>
+              <h4>Step-by-step object construction</h4>
+              <p>Real-world example: building a `Report` with title, filters, charts, and export options.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>new Report("Sales", true, false, "pdf", ...);</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Builder</div>
+                  <div class="pattern-code good"><code>Report report = new ReportBuilder()
+  .title("Sales")
+  .withChart()
+  .build();</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when an object has many optional fields or configuration steps.</div>
+                <div><strong>Problem it solves:</strong> avoids giant constructors that are hard to read and easy to misuse.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Prototype</p>
+              <h4>Clone from an existing template</h4>
+              <p>Real-world example: duplicate a dashboard layout with the same widgets and tweak a few settings.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>Dashboard copy = new Dashboard();
+// repeat all widget setup again</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Prototype</div>
+                  <div class="pattern-code good"><code>Dashboard copy = dashboardTemplate.clone();
+  copy.setTheme("dark");</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when copying an existing configured object is easier than rebuilding it.</div>
+                <div><strong>Problem it solves:</strong> reduces repeated setup code for similar objects.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Facade</p>
+              <h4>One clean entry point</h4>
+              <p>Real-world example: a `TravelBookingService` that hides flight, hotel, payment, and ticket generation details.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>flight.book();
+hotel.reserve();
+payment.pay();
+ticket.send();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Facade</div>
+                  <div class="pattern-code good"><code>tripService.bookTrip(user, from, to, dates);</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when the subsystem is useful but too noisy for direct use.</div>
+                <div><strong>Problem it solves:</strong> reduces client coupling to many internal classes.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Adapter</p>
+              <h4>Make incompatible APIs fit</h4>
+              <p>Real-world example: adapt a third-party payment SDK to your own `PaymentGateway` interface.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>// client depends directly on externalSdk.makePayment(...)</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Adapter</div>
+                  <div class="pattern-code good"><code>gateway.charge(amount);
+// adapter forwards to external SDK</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when existing code expects one interface but the new component exposes another.</div>
+                <div><strong>Problem it solves:</strong> avoids rewriting either side just to make them talk.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Decorator</p>
+              <h4>Add behavior without changing the base class</h4>
+              <p>Real-world example: wrap a file reader with caching, then compression, then encryption.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>EncryptedCachedCompressedFileReader reader;</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Decorator</div>
+                  <div class="pattern-code good"><code>Reader reader =
+  new EncryptedReader(new CachedReader(new FileReader()));</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when features should be layered dynamically.</div>
+                <div><strong>Problem it solves:</strong> avoids huge inheritance trees for combinations of features.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Composite</p>
+              <h4>Treat groups and single items uniformly</h4>
+              <p>Real-world example: a folder can contain files and other folders, but both expose the same operations like `size()`.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>if (item is File) ...
+else if (item is Folder) ...</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Composite</div>
+                  <div class="pattern-code good"><code>int total = rootFolder.size();
+// same call for file or folder</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when tree-shaped data should be handled consistently.</div>
+                <div><strong>Problem it solves:</strong> removes special-case logic for single object vs collection node.</div>
+              </div>
+            </div>
           </div>
         </article>
 
-        <article class="pattern-card reveal">
-          <div class="pattern-text">
-            <p class="pattern-tag">Strategy</p>
-            <h3>Swap algorithms without changing the client</h3>
-            <p>Strategy isolates multiple behaviors behind one shared contract. In your Rate Limiter code, <code>FixedWindowRateLimiter</code>, <code>SlidingWindow</code>, and <code>TokenBucket</code> all implement the same <code>RateLimiter</code> interface.</p>
-            <div class="pattern-grid">
-              <div class="problem-card">
-                <strong>Why we use it</strong>
-                <p>It lets the client call the same method while changing the actual algorithm underneath.</p>
+        <article class="category-panel reveal">
+          <div class="category-head">
+            <h3>Behavioral Patterns</h3>
+            <p>These patterns help organize how objects communicate, how logic changes, and how actions are triggered.</p>
+          </div>
+          <div class="pattern-grid">
+            <div class="pattern-card">
+              <p class="pattern-label">Strategy</p>
+              <h4>Swap algorithms cleanly</h4>
+              <p>Real-world example: choose between credit-card discounts, festival discounts, or loyalty discounts at checkout.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>if (festival) ...
+else if (loyalty) ...
+else if (card) ...</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Strategy</div>
+                  <div class="pattern-code good"><code>checkout.setDiscountStrategy(new LoyaltyDiscount());
+checkout.total();</code></div>
+                </div>
               </div>
-              <div class="problem-card">
-                <strong>Problem it solves</strong>
-                <p>Without strategy, the client ends up with large <code>if/else</code> trees and hard-coded limiter logic that becomes difficult to extend.</p>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when several algorithms solve the same job in different ways.</div>
+                <div><strong>Problem it solves:</strong> avoids giant `if/else` logic in the client.</div>
               </div>
             </div>
-          </div>
-          <div class="codebox">
-            <pre>interface RateLimiter {
-    boolean isAllowRequest();
-}
 
-class FixedWindowRateLimiter implements RateLimiter {
-    @Override
-    public boolean isAllowRequest() { ... }
-}
-
-class TokenBucket implements RateLimiter {
-    @Override
-    public boolean isAllowRequest() { ... }
-}</pre>
-          </div>
-        </article>
-
-        <article class="pattern-card reveal">
-          <div class="pattern-text">
-            <p class="pattern-tag">Observer</p>
-            <h3>Notify interested objects when state changes</h3>
-            <p>Observer is useful when one change should automatically inform many listeners. In Snake and Ladder, <code>playerState</code> notifies all registered players when somebody moves, instead of making each player keep checking manually.</p>
-            <div class="pattern-grid">
-              <div class="problem-card">
-                <strong>Why we use it</strong>
-                <p>It keeps the system event-driven and real-time, which is cleaner than repeated polling.</p>
+            <div class="pattern-card">
+              <p class="pattern-label">Observer</p>
+              <h4>Push updates to listeners</h4>
+              <p>Real-world example: users subscribed to a product get notified when the price drops.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>while (true) checkPriceAgain();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Observer</div>
+                  <div class="pattern-code good"><code>product.attach(user);
+product.setPrice(499);</code></div>
+                </div>
               </div>
-              <div class="problem-card">
-                <strong>Problem it solves</strong>
-                <p>Without observer, listeners must keep asking "did anything change yet?", which is inefficient and harder to test.</p>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when multiple listeners should react to one state change.</div>
+                <div><strong>Problem it solves:</strong> avoids repeated polling and keeps update flow event-driven.</div>
               </div>
             </div>
-          </div>
-          <div class="codebox">
-            <pre>interface playerStatusObserver {
-    void update(playerState data);
-}
 
-class playerState implements playerStatusSubject {
-    private final List&lt;playerStatusObserver&gt; observers = new ArrayList&lt;&gt;();
-
-    public void updatePosition(int pos, User user) {
-        this.lastUpdated = user;
-        this.lastPos = pos;
-        notifyObserver();
-    }
-}</pre>
-          </div>
-        </article>
-
-        <article class="pattern-card reveal">
-          <div class="pattern-text">
-            <p class="pattern-tag">Builder</p>
-            <h3>Make complex object creation easier to manage</h3>
-            <p>You mentioned builders as a next step for custom boards or richer user setup. Builder is useful when object creation starts getting too many optional choices or too many constructor arguments.</p>
-            <div class="pattern-grid">
-              <div class="problem-card">
-                <strong>Why we use it</strong>
-                <p>It makes object creation readable when the configuration becomes more complex.</p>
+            <div class="pattern-card">
+              <p class="pattern-label">Command</p>
+              <h4>Wrap actions as objects</h4>
+              <p>Real-world example: a text editor stores `Copy`, `Paste`, and `Undo` as command objects.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>button.onClick = () => editor.copy();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Command</div>
+                  <div class="pattern-code good"><code>invoker.run(new CopyCommand(editor));
+history.push(command);</code></div>
+                </div>
               </div>
-              <div class="problem-card">
-                <strong>Problem it solves</strong>
-                <p>Without builder, constructors become hard to read, hard to extend, and easy to misuse when there are many optional fields.</p>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when actions need queuing, undo, retry, or logging.</div>
+                <div><strong>Problem it solves:</strong> decouples the action invoker from action execution details.</div>
               </div>
             </div>
-          </div>
-          <div class="codebox">
-            <pre>class BoardBuilder {
-    private final Board board = new Board();
 
-    public BoardBuilder withSnake(int from, int offset) { ... }
-    public BoardBuilder withLadder(int from, int offset) { ... }
-    public Board build() { return board; }
-}</pre>
+            <div class="pattern-card">
+              <p class="pattern-label">State</p>
+              <h4>Change behavior based on current mode</h4>
+              <p>Real-world example: an order behaves differently in `Created`, `Paid`, `Shipped`, and `Cancelled` states.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>if (state == "paid") ...
+else if (state == "shipped") ...</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use State</div>
+                  <div class="pattern-code good"><code>order.pay();
+order.ship();</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when object behavior truly changes with state.</div>
+                <div><strong>Problem it solves:</strong> prevents scattered conditionals across the class.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Template Method</p>
+              <h4>Reuse the same high-level steps</h4>
+              <p>Real-world example: report generation always does `load`, `format`, `export`, but subclasses customize the details.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>salesReport.load();
+salesReport.format();
+salesReport.export();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Template Method</div>
+                  <div class="pattern-code good"><code>generateReport() {
+  load(); format(); export();
+}</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when a workflow is shared but a few steps vary.</div>
+                <div><strong>Problem it solves:</strong> avoids duplicating the overall algorithm in many subclasses.</div>
+              </div>
+            </div>
+
+            <div class="pattern-card">
+              <p class="pattern-label">Chain of Responsibility</p>
+              <h4>Pass a request through handlers</h4>
+              <p>Real-world example: an approval request moves through team lead, manager, and director based on amount.</p>
+              <div class="compare-stack">
+                <div>
+                  <div class="compare-label bad"><span class="compare-dot"></span>Wrong</div>
+                  <div class="pattern-code bad"><code>if (amount &lt; 1000) lead();
+else if (amount &lt; 5000) manager();
+else director();</code></div>
+                </div>
+                <div>
+                  <div class="compare-label good"><span class="compare-dot"></span>Use Chain</div>
+                  <div class="pattern-code good"><code>teamLead.setNext(manager).setNext(director);
+teamLead.handle(request);</code></div>
+                </div>
+              </div>
+              <div class="mini-meta">
+                <div><strong>Why use it:</strong> when multiple handlers may process the same request in order.</div>
+                <div><strong>Problem it solves:</strong> keeps sender and receiver loosely coupled.</div>
+              </div>
+            </div>
           </div>
         </article>
       </div>
