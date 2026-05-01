@@ -12,6 +12,7 @@ const codeModal = document.getElementById("codeModal");
 const codeModalTitle = document.getElementById("codeModalTitle");
 const startZoneTokens = document.getElementById("startZoneTokens");
 const diceIcon = document.getElementById("diceIcon");
+const backButton = document.getElementById("backButton");
 
 const snakes = new Set([17, 47, 64, 80, 95, 99]);
 const ladders = new Set([5, 25, 33, 40, 66]);
@@ -262,6 +263,16 @@ if (expandCodeButton && javaSource) {
 
 if (closeCodeButton) {
   closeCodeButton.addEventListener("click", closeCodeModal);
+}
+
+if (backButton) {
+  backButton.addEventListener("click", () => {
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    window.location.href = "../index.html";
+  });
 }
 
 document.addEventListener("keydown", (event) => {

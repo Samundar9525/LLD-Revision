@@ -134,25 +134,154 @@
     }
 
     .card {
-      display: block;
+      position: relative;
+      display: flex;
+      flex-direction: column;
       text-decoration: none;
       color: inherit;
-      padding: 24px;
+      padding: 22px;
       border-radius: 26px;
-      transition: transform 180ms ease, box-shadow 180ms ease;
+      min-height: 292px;
+      isolation: isolate;
+      overflow: hidden;
+      cursor: pointer;
+      --card-accent: var(--accent);
+      --card-soft: rgba(223, 109, 45, 0.16);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
     }
 
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 30px 75px rgba(109, 60, 23, 0.18);
+    .card:nth-child(2) { --card-accent: var(--accent-3); --card-soft: rgba(23, 115, 176, 0.16); }
+    .card:nth-child(3) { --card-accent: #1f7a5c; --card-soft: rgba(31, 122, 92, 0.16); }
+    .card:nth-child(4) { --card-accent: #9b5ad6; --card-soft: rgba(155, 90, 214, 0.15); }
+    .card:nth-child(5) { --card-accent: #c75734; --card-soft: rgba(199, 87, 52, 0.16); }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.34)),
+        radial-gradient(circle at 100% 0%, var(--card-soft), transparent 38%);
+      opacity: 0.76;
+      transition: opacity 180ms ease;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(34, 27, 24, 0.08);
+      pointer-events: none;
+      opacity: 0.72;
+      transition: opacity 180ms ease;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-7px) scale(1.01);
+      border-color: color-mix(in srgb, var(--card-accent) 34%, white);
+      background: var(--panel-strong);
+      box-shadow: 0 38px 88px rgba(109, 60, 23, 0.24);
+      outline: none;
+    }
+
+    .card:hover::before,
+    .card:hover::after,
+    .card:focus-visible::before,
+    .card:focus-visible::after {
+      opacity: 1;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card-badge {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: var(--card-accent);
+      color: #fffaf3;
+      font-size: 0.82rem;
+      font-weight: 900;
+      box-shadow: 0 14px 28px color-mix(in srgb, var(--card-accent) 30%, transparent);
+    }
+
+    .card-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: rgba(34, 27, 24, 0.72);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .card-kicker::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--card-accent);
+      box-shadow: 0 0 0 5px var(--card-soft);
     }
 
     .card h2 {
-      font-size: 1.3rem;
+      font-size: 1.35rem;
+      line-height: 1.02;
       margin-bottom: 10px;
     }
 
-    .card p { margin: 0; }
+    .card p {
+      margin: 0;
+      flex: 1;
+    }
+
+    .card-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(34, 27, 24, 0.08);
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--card-accent);
+    }
+
+    .card-arrow {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: #221b18;
+      color: #fffaf3;
+      font-size: 1.15rem;
+      line-height: 1;
+      box-shadow: 0 10px 20px rgba(34, 27, 24, 0.18);
+      transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+
+    .card:hover .card-arrow,
+    .card:focus-visible .card-arrow {
+      transform: translateX(3px);
+      background: var(--card-accent);
+      box-shadow: 0 12px 24px color-mix(in srgb, var(--card-accent) 34%, transparent);
+    }
 
     .card-tag {
       display: inline-flex;
@@ -584,33 +713,53 @@
 
         <div class="hero-grid">
           <a class="card" href="./snake-logic-page/index.html">
-            <span class="card-tag">Interactive Walkthrough</span>
+            <span class="card-top">
+              <span class="card-badge">01</span>
+              <span class="card-kicker">Interactive</span>
+            </span>
             <h2>Snake and ladder LLD</h2>
             <p>Board rules, player flow, design choices, and a runnable Java walkthrough.</p>
+            <span class="card-action">Open page <span class="card-arrow" aria-hidden="true">&rarr;</span></span>
           </a>
 
           <a class="card" href="./rate-limiter-page/index.html">
-            <span class="card-tag">Interactive Walkthrough</span>
+            <span class="card-top">
+              <span class="card-badge">02</span>
+              <span class="card-kicker">Interactive</span>
+            </span>
             <h2>Rate limiter LLD</h2>
             <p>Fixed window, sliding window, token bucket, code explanation, and a compiler section.</p>
+            <span class="card-action">Open page <span class="card-arrow" aria-hidden="true">&rarr;</span></span>
           </a>
 
           <a class="card" href="./coupon-discount-page/index.html">
-            <span class="card-tag">Interview Walkthrough</span>
+            <span class="card-top">
+              <span class="card-badge">03</span>
+              <span class="card-kicker">Interview</span>
+            </span>
             <h2>Coupon discount LLD</h2>
             <p>Strategy, Factory, Singleton, thread safety, code snippets, and interview-ready explanation.</p>
+            <span class="card-action">Open page <span class="card-arrow" aria-hidden="true">&rarr;</span></span>
           </a>
 
           <a class="card" href="./notification-system-page/index.html">
-            <span class="card-tag">Interview Walkthrough</span>
+            <span class="card-top">
+              <span class="card-badge">04</span>
+              <span class="card-kicker">Interview</span>
+            </span>
             <h2>Notification system LLD</h2>
             <p>Strategy, Observer, user preferences, broadcast fan-out, snippets, and runnable Java code.</p>
+            <span class="card-action">Open page <span class="card-arrow" aria-hidden="true">&rarr;</span></span>
           </a>
 
           <a class="card" href="./parking-lot-page/index.html">
-            <span class="card-tag">Interview Walkthrough</span>
+            <span class="card-top">
+              <span class="card-badge">05</span>
+              <span class="card-kicker">Interview</span>
+            </span>
             <h2>Parking lot LLD</h2>
             <p>Vehicle factory, floor/slot allocation, concurrency-safe parking, snippets, and runnable Java code.</p>
+            <span class="card-action">Open page <span class="card-arrow" aria-hidden="true">&rarr;</span></span>
           </a>
         </div>
       </section>
