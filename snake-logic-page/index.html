@@ -19,7 +19,7 @@
         </div>
         <div class="nav-group">
           <a class="nav-pill" href="../index.html">LLD Designs</a>
-          <a class="nav-pill" href="#approach">Architecture Walkthrough</a>
+          <a class="nav-pill" href="#approach">Architecture Walkthrough</a><a class="nav-pill" href="#snippets">Snippets</a><a class="nav-pill" href="#run-code">Code</a>
         </div>
       </nav>
 
@@ -33,7 +33,7 @@
           </p>
           <div class="hero-actions">
             <a class="cta primary" href="#flow">See Turn Flow</a>
-            <a class="cta secondary" href="#patterns">Why These Patterns</a>
+            <a class="cta secondary" href="#snippets">Explain Code</a>
           </div>
 
           <div class="hero-metrics">
@@ -237,7 +237,101 @@
           </article>
         </div>
       </section>
+      <section class="section" id="snippets">
+        <div class="section-heading">
+          <p class="eyebrow">Code Walkthrough</p>
+          <h2>Explain each important snippet like an interview answer</h2>
+        </div>
 
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Board Model</p>
+              <h3>Board owns snakes, ladders, and position transformation</h3>
+              <p>The board is the best place to store jump rules because snakes and ladders are board data, not player data.</p>
+              <pre><code>class Board {
+    private final Map&lt;Integer, Integer&gt; jumps = new HashMap&lt;&gt;();
+
+    public int applyRules(int position) {
+        return jumps.getOrDefault(position, position);
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Interview answer</div>
+              <div class="reason-card">This follows SRP: the board knows how a cell transforms, while the game manager only asks for the final position.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Dice Singleton</p>
+              <h3>One shared dice service</h3>
+              <p>The dice exposes one behavior: roll a number from 1 to 6. In this demo it is a singleton so every part of the game uses the same dice object.</p>
+              <pre><code>class Dice {
+    private static final Dice INSTANCE = new Dice();
+
+    private Dice() {}
+
+    public static Dice getInstance() {
+        return INSTANCE;
+    }
+
+    public int roll() {
+        return ThreadLocalRandom.current().nextInt(1, 7);
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Design pattern</div>
+              <div class="reason-card">This is Singleton Pattern. In production, dependency injection would make dice behavior easier to test.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Facade</p>
+              <h3>Game manager coordinates the use case</h3>
+              <p>The manager hides the internal flow: player queue, dice roll, board rule, notification, and win check.</p>
+              <pre><code>while (!winnerFound) {
+    User current = players.poll();
+    int roll = Dice.getInstance().roll();
+    int next = current.getPosition() + roll;
+    int finalPosition = board.applyRules(next);
+    current.setPosition(finalPosition);
+    players.offer(current);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Interview answer</div>
+              <div class="reason-card">The client starts the game through one simple entry point instead of managing board, dice, queue, and rules itself.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Observer</p>
+              <h3>Notify players when state changes</h3>
+              <p>The observer idea helps broadcast a move when a player position changes. This avoids polling and keeps updates event-driven.</p>
+              <pre><code>interface playerStatusObserver {
+    void update(String message);
+}
+
+class playerState {
+    private final List&lt;playerStatusObserver&gt; observers = new ArrayList&lt;&gt;();
+
+    public void notifyObservers(String message) {
+        observers.forEach(observer -&gt; observer.update(message));
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Design pattern</div>
+              <div class="reason-card">This is Observer Pattern. It is useful when multiple objects should react to one state change.</div>
+            </div>
+          </article>
+        </div>
+      </section>
       <section class="section" id="run-code">
         <div class="section-heading">
           <p class="eyebrow">Run The Code</p>
@@ -248,7 +342,7 @@
           <article class="panel code-panel reveal">
             <div class="code-panel-header">
               <h3>Java Source</h3>
-              <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+              <div class="code-actions"><button class="copy-button" id="copyCodeButton" type="button">Copy code</button><button class="copy-button secondary-button icon-button" id="expandCodeButton" type="button" aria-label="Expand full code"><span class="expand-icon" aria-hidden="true"></span></button></div>
             </div>
             <p class="compiler-note">
               This page is static, so it stays GitHub Pages friendly. For the embedded compiler version, the package line is removed so the class can run directly. If you run it locally in an IDE, you can keep the original package structure.
@@ -506,15 +600,15 @@ class Play {
     }
 }
 
-public class snake_and_ladder {
-    public snake_and_ladder(){
+public class Main {
+    public Main(){
         System.out.println("snake and ladder");
         gameManager game = new gameManager(1);
         game.simulate(2);
     }
 
     public static void main(String[] args) {
-        new snake_and_ladder();
+        new Main();
     }
 }</textarea>
             <div class="compiler-actions">
@@ -552,6 +646,13 @@ public class snake_and_ladder {
         </div>
       </section>
     </main>
+  </div>
+  <div class="code-modal" id="codeModal" aria-hidden="true">
+    <div class="modal-toolbar">
+      <strong id="codeModalTitle">Main.java</strong>
+      <button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button>
+    </div>
+    <textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea>
   </div>
 
   <script src="script.js"></script>

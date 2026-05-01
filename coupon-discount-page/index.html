@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coupon Discount LLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span>Coupon Discount</span>
+        </div>
+        <div class="nav-group">
+          <button class="nav-pill button-pill" id="backButton" type="button">Back</button>
+          <a class="nav-pill" href="../index.html">Home</a>
+          <a class="nav-pill" href="#patterns">Patterns</a>
+          <a class="nav-pill" href="#run-code">Code</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Logic Behind The Code</p>
+          <h1>Coupon discount LLD</h1>
+          <p class="hero-text">
+            A visual low-level design walkthrough of your coupon system, showing how coupon creation,
+            strategy selection, validation, quantity updates, and discount calculation work together.
+          </p>
+
+          <div class="hero-actions">
+            <a class="cta primary" href="#patterns">See Patterns</a>
+            <a class="cta secondary" href="#run-code">Open Code</a>
+          </div>
+
+          <div class="hero-metrics">
+            <article>
+              <strong>3</strong>
+              <span>Design patterns</span>
+            </article>
+            <article>
+              <strong>2</strong>
+              <span>Discount strategies</span>
+            </article>
+            <article>
+              <strong>Atomic + Sync</strong>
+              <span>Quantity safety</span>
+            </article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="status-dot"></span>
+              <span>Coupon application animation</span>
+            </div>
+
+            <div class="request-flow">
+              <div class="flow-column">
+                <span class="flow-label">Coupon code</span>
+                <div class="flow-stage">
+                  <div class="coupon-block incoming" id="heroCoupon">SAVE100</div>
+                </div>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-column">
+                <span class="flow-label">Strategy</span>
+                <div class="flow-stage">
+                  <div class="server-block" id="heroStrategy">FlatDiscount</div>
+                </div>
+              </div>
+              <div class="flow-arrow">-&gt;</div>
+              <div class="flow-column">
+                <span class="flow-label">Result</span>
+                <div class="flow-stage">
+                  <div class="coupon-block allowed" id="heroDecision">Applied</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="turn-console">
+              <div class="console-row">
+                <span>Amount</span>
+                <strong id="heroAmount">1000</strong>
+              </div>
+              <div class="console-row">
+                <span>Discount</span>
+                <strong id="heroDiscount">100 flat</strong>
+              </div>
+              <div class="console-row">
+                <span>Quantity</span>
+                <strong id="heroQuantity">99 left</strong>
+              </div>
+              <div class="console-row">
+                <span>Final</span>
+                <strong id="heroFinal">900</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="patterns">
+        <div class="section-heading">
+          <p class="eyebrow">Design Intent</p>
+          <h2>What your code is doing</h2>
+        </div>
+
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal">
+            <h3>Strategy Pattern</h3>
+            <p><code>DiscountStrategy</code> gives every discount type the same contract. The coupon can apply flat or percentage discounts without knowing the concrete class.</p>
+          </article>
+          <article class="info-card accent-green reveal">
+            <h3>Factory Pattern</h3>
+            <p><code>CouponFactory</code> centralizes object creation. The client passes <code>FLAT</code> or <code>PERCENT</code>, and the factory attaches the right strategy.</p>
+          </article>
+          <article class="info-card accent-blue reveal">
+            <h3>Singleton Pattern</h3>
+            <p><code>CouponService</code> is one shared in-memory registry. It uses double-checked locking with <code>volatile</code> for safe lazy initialization.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="solid">
+        <div class="section-heading">
+          <p class="eyebrow">Design Principles</p>
+          <h2>How SOLID appears in this design</h2>
+        </div>
+
+        <div class="timeline">
+          <article class="timeline-step reveal">
+            <span class="step-number">01</span>
+            <div>
+              <h3>Single Responsibility Principle</h3>
+              <p>Strategy classes calculate discounts, the factory creates coupons, the service manages storage, and the coupon validates and applies itself.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">02</span>
+            <div>
+              <h3>Open/Closed Principle</h3>
+              <p>To add a new discount type, create another class implementing <code>DiscountStrategy</code>. The existing <code>Coupon</code> class stays unchanged.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">03</span>
+            <div>
+              <h3>Dependency Inversion Principle</h3>
+              <p><code>Coupon</code> depends on the abstraction <code>DiscountStrategy</code>, not directly on <code>FlatDiscount</code> or <code>PercentageDiscount</code>.</p>
+            </div>
+          </article>
+          <article class="timeline-step reveal">
+            <span class="step-number">04</span>
+            <div>
+              <h3>Thread Safety</h3>
+              <p><code>ConcurrentHashMap</code> protects coupon storage. The synchronized coupon application block keeps validation and quantity decrement atomic.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="flow">
+        <div class="section-heading">
+          <p class="eyebrow">Request Flow</p>
+          <h2>How creation and application move through the classes</h2>
+        </div>
+
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Creation Flow</p>
+              <h3>Client asks factory to build a coupon</h3>
+              <p>The factory decides which strategy object should be attached to the coupon. This keeps the client clean and avoids strategy creation logic in the UI layer.</p>
+              <pre><code>Coupon c = CouponFactory.CreateCoupon(type, code, val);
+service.addCoupon(c);</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Object creation path</div>
+              <div class="flow-map">
+                <span>Client</span>
+                <span>CouponFactory</span>
+                <span>DiscountStrategy</span>
+                <span>Coupon</span>
+                <span>CouponService</span>
+              </div>
+              <p class="visual-note">Interview line: the client only gives coupon details; the factory hides concrete object construction.</p>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Application Flow</p>
+              <h3>Service finds coupon, coupon applies strategy</h3>
+              <p>The service coordinates the use case, but it does not calculate the discount. The coupon validates itself, decrements quantity, then delegates to the selected strategy.</p>
+              <pre><code>double finalAmt = service.applyCoupon(code, amt);</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Runtime call path</div>
+              <div class="flow-map">
+                <span>Client</span>
+                <span>CouponService</span>
+                <span>Coupon</span>
+                <span>DiscountStrategy</span>
+                <span>Final Amount</span>
+              </div>
+              <p class="visual-note">Interview line: service coordinates, coupon owns validation, strategy owns discount calculation.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="snippets">
+        <div class="section-heading">
+          <p class="eyebrow">Code Walkthrough</p>
+          <h2>Explain each important snippet like an interview answer</h2>
+        </div>
+
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Interface</p>
+              <h3>One contract for all discounts</h3>
+              <p><code>DiscountStrategy</code> lets the coupon use any discount algorithm through one method.</p>
+              <pre><code>interface DiscountStrategy {
+    long applyDiscount(long amount);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Why this matters</div>
+              <div class="reason-card">If tomorrow we add cashback, festival, or loyalty discount, we only add another strategy implementation.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Concrete Strategies</p>
+              <h3>Flat and percentage discounts</h3>
+              <p>Each class owns one calculation rule, so the logic stays small and testable.</p>
+              <pre><code>class FlatDiscount implements DiscountStrategy {
+    public long applyDiscount(long amount) {
+        return amount - flatDiscountAmount;
+    }
+}
+
+class PercentageDiscount implements DiscountStrategy {
+    public long applyDiscount(long amount) {
+        return amount - (amount * flatDiscountAmountPercentage / 100);
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Interview answer</div>
+              <div class="reason-card">These are concrete strategies. They follow SRP because each class handles only one discount formula.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Coupon Entity</p>
+              <h3>Coupon keeps state and delegates calculation</h3>
+              <p>The constructor receives the strategy, which keeps coupon independent from concrete discount classes.</p>
+              <pre><code>class Coupon {
+    protected String Code;
+    private DiscountStrategy strategy;
+    private LocalDate expiryDate;
+    private AtomicInteger quantity;
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Design principle</div>
+              <div class="reason-card">This is dependency injection. Coupon depends on the interface, so it follows Dependency Inversion.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Validation + Quantity</p>
+              <h3>The critical thread-safe block</h3>
+              <p>The check and decrement happen inside one lock so two users cannot consume the same last coupon.</p>
+              <pre><code>public long applyCoupon(long amt) {
+    synchronized (this) {
+        if (!isValidCoupon()) {
+            throw new RuntimeException("Invalid coupon");
+        }
+        quantity.decrementAndGet();
+        return strategy.applyDiscount(amt);
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Concurrency note</div>
+              <div class="reason-card">AtomicInteger protects individual operations, but the full check-then-decrement decision needs synchronization.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Factory</p>
+              <h3>Choose the right strategy at creation time</h3>
+              <p>The factory keeps coupon construction logic in one place and prevents the client from directly creating strategy objects.</p>
+              <pre><code>if (type.equalsIgnoreCase("FLAT")) {
+    return new Coupon(Code, new FlatDiscount((int) val),
+        LocalDate.now().plusDays(2), 100);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Factory benefit</div>
+              <div class="reason-card">Creation is centralized. If default expiry or quantity changes, we update the factory instead of every client.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Singleton Service</p>
+              <h3>One shared coupon registry</h3>
+              <p>The service uses double-checked locking with <code>volatile</code> so only one instance is created safely.</p>
+              <pre><code>public static CouponService getInstance() {
+    if (instance == null) {
+        synchronized (CouponService.class) {
+            if (instance == null) {
+                instance = new CouponService();
+            }
+        }
+    }
+    return instance;
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Service role</div>
+              <div class="reason-card">The service stores coupons in a ConcurrentHashMap and delegates discount application to the coupon object.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading">
+          <p class="eyebrow">Run The Code</p>
+          <h2>Read it here, run it in the embedded Java compiler</h2>
+        </div>
+
+        <div class="compiler-layout">
+          <article class="panel code-panel reveal">
+            <div class="code-panel-header">
+              <div>
+                <h3>Java Source</h3>
+                <p class="compiler-note">This version is compiler-friendly: no package line, class name is <code>Main</code>, and it runs an automatic coupon demo without console input.</p>
+              </div>
+              <div class="code-actions">
+                <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+                <button class="copy-button secondary-button icon-button" id="expandCodeButton" type="button" aria-label="Expand full code"><span class="expand-icon" aria-hidden="true"></span></button>
+              </div>
+            </div>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.time.LocalDate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+interface DiscountStrategy{
+    public long applyDiscount(long amount);
+}
+
+class FlatDiscount implements DiscountStrategy{
+
+    private long flatDiscountAmount;
+    FlatDiscount(int flatamt){
+        this.flatDiscountAmount = flatamt;
+    }
+    @Override
+    public long applyDiscount(long amount){
+        return amount - flatDiscountAmount;
+    }
+}
+
+class PercentageDiscount implements DiscountStrategy{
+
+    private long flatDiscountAmountPercentage;
+    PercentageDiscount(int flatamt){
+        this.flatDiscountAmountPercentage = flatamt;
+    }
+    @Override
+    public long applyDiscount(long amount){
+        return amount - (amount * flatDiscountAmountPercentage / 100);
+    }
+}
+
+class Coupon{
+    protected String Code;
+    private DiscountStrategy strategy;
+    private LocalDate expiryDate;
+    private AtomicInteger quantity;
+
+    public Coupon(String code, DiscountStrategy strategy, LocalDate expiryDate, int quantity) {
+        Code = code;
+        this.strategy = strategy;
+        this.expiryDate = expiryDate;
+        this.quantity = new AtomicInteger(quantity);
+    }
+
+    public boolean isValidCoupon(){
+        return LocalDate.now().isBefore(expiryDate) && quantity.get() > 0;
+    }
+
+    public long applyCoupon(long amt){
+        synchronized (this) {
+            if (!isValidCoupon()) {
+                throw new RuntimeException("Invalid coupon");
+            }
+            quantity.decrementAndGet();
+            return strategy.applyDiscount(amt);
+        }
+    }
+
+    public int getQuantity() { return quantity.get(); }
+    public LocalDate getExpiryDate() { return expiryDate; }
+}
+
+class CouponFactory{
+
+    public static Coupon CreateCoupon(String type,String Code,long val){
+        if (type == null) throw new RuntimeException("Invalid Coupon Details");
+        if (type.equalsIgnoreCase("FLAT")){
+            return new Coupon(Code, new FlatDiscount((int) val), LocalDate.now().plusDays(2), 100);
+        } else if (type.equalsIgnoreCase("PERCENT")){
+            return new Coupon(Code, new PercentageDiscount((int) val), LocalDate.now().plusDays(2), 100);
+        } else {
+            throw new RuntimeException("Invalid Coupon Details");
+        }
+    }
+}
+
+class CouponService {
+
+    private static volatile CouponService instance;
+    private final Map<String, Coupon> coupons = new ConcurrentHashMap<>();
+
+    private CouponService() {}
+
+    public static CouponService getInstance() {
+        if (instance == null) {
+            synchronized (CouponService.class) {
+                if (instance == null) {
+                    instance = new CouponService();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public void addCoupon(Coupon coupon) {
+        coupons.put(coupon.Code, coupon);
+    }
+
+    public double applyCoupon(String code, long amount) {
+        Coupon coupon = coupons.get(code);
+        if (coupon == null) throw new RuntimeException("Coupon not found");
+        return coupon.applyCoupon(amount);
+    }
+
+    public Map<String, Coupon> getAllCoupons() {
+        return new ConcurrentHashMap<>(coupons);
+    }
+}
+
+public class Main {
+
+    public static void main(String[] args) {
+        CouponService service = CouponService.getInstance();
+
+        Coupon flatCoupon = CouponFactory.CreateCoupon("FLAT", "SAVE100", 100);
+        Coupon percentCoupon = CouponFactory.CreateCoupon("PERCENT", "FEST10", 10);
+
+        service.addCoupon(flatCoupon);
+        service.addCoupon(percentCoupon);
+
+        System.out.println("Coupons added successfully");
+        printCoupons(service);
+
+        applyAndPrint(service, "SAVE100", 1000);
+        applyAndPrint(service, "FEST10", 2000);
+        applyAndPrint(service, "SAVE100", 750);
+
+        System.out.println();
+        System.out.println("Coupons after usage");
+        printCoupons(service);
+    }
+
+    private static void applyAndPrint(CouponService service, String code, long amount) {
+        double finalAmount = service.applyCoupon(code, amount);
+        System.out.println();
+        System.out.println("Coupon applied: " + code);
+        System.out.println("Original amount: " + amount);
+        System.out.println("Final amount: " + finalAmount);
+    }
+
+    private static void printCoupons(CouponService service) {
+        System.out.println();
+        service.getAllCoupons().values().forEach(coupon ->
+            System.out.println(coupon.Code + " | qty=" + coupon.getQuantity() + " | exp=" + coupon.getExpiryDate())
+        );
+    }
+}</textarea>
+          </article>
+
+          <article class="panel compiler-panel reveal">
+            <h3>Embedded Compiler</h3>
+            <p class="compiler-note">Copy the Java source on the left and paste it into the compiler. It runs directly with sample coupons, so no manual input is required.</p>
+            <iframe
+              class="compiler-frame"
+              title="Embedded Java Compiler"
+              src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true"
+              loading="lazy"
+              frameborder="0"></iframe>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="code-modal" id="codeModal" aria-hidden="true">
+    <div class="modal-toolbar">
+      <strong id="codeModalTitle">CouponDiscount.java</strong>
+      <button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button>
+    </div>
+    <textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

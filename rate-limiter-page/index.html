@@ -473,7 +473,7 @@ Thread printer = new Thread(() -&gt; {
           <article class="panel code-panel reveal">
             <div class="code-panel-header">
               <h3>Java Source</h3>
-              <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+              <div class="code-actions"><button class="copy-button" id="copyCodeButton" type="button">Copy code</button><button class="copy-button secondary-button icon-button" id="expandCodeButton" type="button" aria-label="Expand full code"><span class="expand-icon" aria-hidden="true"></span></button></div>
             </div>
             <p class="compiler-note">
               This static page stays GitHub Pages friendly. For the embedded compiler, the package line is removed so the main class can run directly.
@@ -723,6 +723,13 @@ public class RateLimiterClient {
         </div>
       </section>
     </main>
+  </div>
+  <div class="code-modal" id="codeModal" aria-hidden="true">
+    <div class="modal-toolbar">
+      <strong id="codeModalTitle">Main.java</strong>
+      <button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button>
+    </div>
+    <textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea>
   </div>
 
   <script src="script.js"></script>

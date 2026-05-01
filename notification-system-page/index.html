@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification System LLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand"><span class="brand-mark"></span><span>Notification System</span></div>
+        <div class="nav-group">
+          <button class="nav-pill button-pill" id="backButton" type="button">Back</button>
+          <a class="nav-pill" href="../index.html">Home</a>
+          <a class="nav-pill" href="#patterns">Patterns</a>
+          <a class="nav-pill" href="#run-code">Code</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Logic Behind The Code</p>
+          <h1>Notification system LLD</h1>
+          <p class="hero-text">A visual walkthrough of direct notifications and broadcast messaging using Strategy Pattern for channels and Observer Pattern for subscribers.</p>
+          <div class="hero-actions">
+            <a class="cta primary" href="#patterns">See Patterns</a>
+            <a class="cta secondary" href="#run-code">Run Code</a>
+          </div>
+          <div class="hero-metrics">
+            <article><strong>3</strong><span>Notification channels</span></article>
+            <article><strong>2</strong><span>Core patterns</span></article>
+            <article><strong>Broadcast</strong><span>Observer fan-out</span></article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header"><span class="status-dot"></span><span>Broadcast delivery animation</span></div>
+            <div class="notification-stage">
+              <div class="hub">
+                <span class="hub-ring one"></span>
+                <span class="hub-ring two"></span>
+                <strong id="heroMessage">Maintenance 10PM</strong>
+                <small>MessageSubject</small>
+              </div>
+              <div class="channel email"><span>@</span><strong>Email</strong></div>
+              <div class="channel sms"><span>#</span><strong>SMS</strong></div>
+              <div class="channel whatsapp"><span>✓</span><strong>WhatsApp</strong></div>
+              <div class="packet p1"></div>
+              <div class="packet p2"></div>
+              <div class="packet p3"></div>
+            </div>
+            <div class="turn-console">
+              <div class="console-row"><span>User</span><strong id="heroUser">SAM</strong></div>
+              <div class="console-row"><span>Preference</span><strong id="heroPreference">SMS + EMAIL</strong></div>
+              <div class="console-row"><span>Pattern</span><strong id="heroPattern">Strategy + Observer</strong></div>
+              <div class="console-row"><span>Status</span><strong id="heroStatus">Delivered</strong></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="patterns">
+        <div class="section-heading"><p class="eyebrow">Design Intent</p><h2>What your code is doing</h2></div>
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal"><h3>Strategy Pattern</h3><p><code>NotificationStrategy</code> gives Email, SMS, and WhatsApp the same send contract. New channels can be added without changing the caller.</p></article>
+          <article class="info-card accent-green reveal"><h3>Observer Pattern</h3><p><code>MessageSubject</code> broadcasts a new message to all registered observers. Each observer then sends through the user preferred channels.</p></article>
+          <article class="info-card accent-blue reveal"><h3>Thread-Friendly Collections</h3><p><code>CopyOnWriteArrayList</code> keeps observer iteration safe while observers are added or removed.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="solid">
+        <div class="section-heading"><p class="eyebrow">Design Principles</p><h2>How SOLID appears in this design</h2></div>
+        <div class="timeline">
+          <article class="timeline-step reveal"><span class="step-number">01</span><div><h3>Single Responsibility</h3><p>Channel classes only send messages, subject manages subscribers, observer maps preferences to channels, and service coordinates direct send.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">02</span><div><h3>Open/Closed</h3><p>To add Push Notification, create another strategy and register it in the strategy map.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">03</span><div><h3>Dependency Inversion</h3><p><code>MessageService</code> depends on <code>NotificationStrategy</code>, not concrete channel classes.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">04</span><div><h3>Broadcast Fan-Out</h3><p>The subject does not know how each user receives notifications. Observers own user-specific delivery preferences.</p></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="flow">
+        <div class="section-heading"><p class="eyebrow">Request Flow</p><h2>How direct and broadcast notifications move</h2></div>
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy"><p class="algorithm-tag">Direct Send</p><h3>MessageService sends through one selected strategy</h3><p>The client chooses the concrete channel and passes it as a strategy. The service calls the interface method.</p><pre><code>MessageService m1 = new MessageService("ID01", "Hello", new Email());
+m1.sendNotification();</code></pre></div>
+            <div class="algorithm-visual"><div class="visual-title">Interview answer</div><div class="reason-card">This is Strategy Pattern: the sending algorithm is swappable at runtime.</div></div>
+          </article>
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy"><p class="algorithm-tag">Broadcast Send</p><h3>Subject notifies all registered observers</h3><p>When the subject message changes, every observer receives the update and sends through that user preferred channels.</p><pre><code>subject.add(ob1);
+subject.add(ob2);
+subject.setMessage("Broadcast: System Maintenance at 10PM");</code></pre></div>
+            <div class="algorithm-visual"><div class="visual-title">Runtime path</div><div class="flow-map"><span>Subject</span><span>Observer</span><span>User Preferences</span><span>Strategy Map</span><span>Channels</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="snippets">
+        <div class="section-heading"><p class="eyebrow">Code Walkthrough</p><h2>Explain each important snippet like an interview answer</h2></div>
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Channel Contract</p><h3>One interface for every notification type</h3><p>Every channel implements the same <code>send</code> method.</p><pre><code>interface NotificationStrategy {
+    boolean send(String message, String id);
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Pattern</div><div class="reason-card">This is Strategy Pattern. Email, SMS, WhatsApp are separate algorithms behind one contract.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Direct Service</p><h3>MessageService delegates sending</h3><p>The service stores message, user id, and selected strategy.</p><pre><code>class MessageService {
+    private NotificationStrategy strategy;
+
+    public void sendNotification() {
+        strategy.send(Message, UserId);
+    }
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Design principle</div><div class="reason-card">This follows Dependency Inversion because the service talks to an interface.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Subject</p><h3>Broadcast message source</h3><p>The subject keeps observers and calls update when a new message is published.</p><pre><code>public void setMessage(String message) {
+    this.message = message;
+    Notify();
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Pattern</div><div class="reason-card">This is Observer Pattern. A state change triggers updates to all subscribers.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Observer</p><h3>User preferences decide delivery channels</h3><p>The observer reads user preferences and uses the strategy map.</p><pre><code>for (NotificationTypes type : user.getPreferredNotificationTypes()) {
+    NotificationStrategy strategy = strategyMap.get(type);
+    if (strategy != null) {
+        strategy.send(msg, user.getId());
+    }
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Interview answer</div><div class="reason-card">User-specific fan-out is outside the subject, so the subject stays loosely coupled.</div></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading"><p class="eyebrow">Run The Code</p><h2>Read it here, run it in the embedded Java compiler</h2></div>
+        <div class="compiler-layout">
+          <article class="panel code-panel reveal">
+            <div class="code-panel-header"><div><h3>Java Source</h3><p class="compiler-note">Compiler-friendly version: no package line and runnable class is <code>Main</code>. It runs direct-send plus broadcast automatically.</p></div><div class="code-actions"><button class="copy-button" id="copyCodeButton" type="button">Copy code</button><button class="copy-button secondary-button icon-button" id="expandCodeButton" type="button" aria-label="Expand full code"><span class="expand-icon" aria-hidden="true"></span></button></div></div>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+enum NotificationTypes {
+    EMAIL, SMS, WHATSAPP
+}
+
+class User {
+    private String userName;
+    private String id;
+    private List<NotificationTypes> preferredNotificationTypes;
+
+    public User(String name, String id, List<NotificationTypes> preferredNotificationTypes) {
+        this.userName = name;
+        this.id = id;
+        this.preferredNotificationTypes = preferredNotificationTypes;
+    }
+
+    public String getId() { return this.id; }
+    public String getUserName() { return this.userName; }
+    public List<NotificationTypes> getPreferredNotificationTypes() { return preferredNotificationTypes; }
+}
+
+interface NotificationStrategy {
+    boolean send(String message, String id);
+}
+
+class Email implements NotificationStrategy {
+    public boolean send(String message, String id) {
+        System.out.println("EMAIL : " + message + " to : " + id);
+        return true;
+    }
+}
+
+class WhatsApp implements NotificationStrategy {
+    public boolean send(String message, String id) {
+        System.out.println("WHATSAPP : " + message + " to : " + id);
+        return true;
+    }
+}
+
+class SMS implements NotificationStrategy {
+    public boolean send(String message, String id) {
+        System.out.println("SMS : " + message + " to : " + id);
+        return true;
+    }
+}
+
+class MessageService {
+    private NotificationStrategy strategy;
+    private String message;
+    private String userId;
+
+    public MessageService(String id, String message, NotificationStrategy strategy) {
+        this.strategy = strategy;
+        this.message = message;
+        this.userId = id;
+    }
+
+    public void sendNotification() {
+        this.strategy.send(this.message, this.userId);
+    }
+}
+
+interface MessageSubject {
+    void add(MessageObserver observer);
+    void remove(MessageObserver observer);
+    void notifyObservers();
+    String getMessage();
+}
+
+interface MessageObserver {
+    void update(MessageSubject subject);
+}
+
+class MessageConcreteSubject implements MessageSubject {
+    final List<MessageObserver> recipients = new CopyOnWriteArrayList<>();
+    private String message;
+
+    public void setMessage(String message) {
+        this.message = message;
+        notifyObservers();
+    }
+
+    public String getMessage() { return message; }
+    public void add(MessageObserver observer) { recipients.add(observer); }
+    public void remove(MessageObserver observer) { recipients.remove(observer); }
+
+    public void notifyObservers() {
+        for (MessageObserver user : recipients) {
+            user.update(this);
+        }
+    }
+}
+
+class MessageConcreteObserver implements MessageObserver {
+    private final User user;
+    private final Map<NotificationTypes, NotificationStrategy> strategyMap;
+
+    public MessageConcreteObserver(User user, Map<NotificationTypes, NotificationStrategy> strategyMap) {
+        this.user = user;
+        this.strategyMap = strategyMap;
+    }
+
+    public void update(MessageSubject subject) {
+        String msg = subject.getMessage();
+        for (NotificationTypes type : user.getPreferredNotificationTypes()) {
+            NotificationStrategy strategy = strategyMap.get(type);
+            if (strategy != null) {
+                strategy.send(msg, user.getId());
+            }
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        User u1 = new User("SAM", "Id01", Arrays.asList(NotificationTypes.SMS, NotificationTypes.EMAIL));
+        User u2 = new User("PAM", "Id02", Arrays.asList(NotificationTypes.WHATSAPP, NotificationTypes.EMAIL));
+
+        System.out.println("Direct notifications");
+        new MessageService("Id01", "Hello", new Email()).sendNotification();
+        new MessageService("Id01", "Hello", new SMS()).sendNotification();
+        new MessageService("Id01", "Hello", new WhatsApp()).sendNotification();
+
+        Map<NotificationTypes, NotificationStrategy> strategyMap = new HashMap<>();
+        strategyMap.put(NotificationTypes.EMAIL, new Email());
+        strategyMap.put(NotificationTypes.SMS, new SMS());
+        strategyMap.put(NotificationTypes.WHATSAPP, new WhatsApp());
+
+        MessageConcreteSubject subject = new MessageConcreteSubject();
+        subject.add(new MessageConcreteObserver(u1, strategyMap));
+        subject.add(new MessageConcreteObserver(u2, strategyMap));
+
+        System.out.println();
+        System.out.println("Broadcast notification");
+        subject.setMessage("Broadcast: System Maintenance at 10PM");
+    }
+}</textarea>
+          </article>
+          <article class="panel compiler-panel reveal"><h3>Embedded Compiler</h3><p class="compiler-note">Copy the Java source on the left and paste it into the compiler. It runs immediately with direct and broadcast examples.</p><iframe class="compiler-frame" title="Embedded Java Compiler" src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true" loading="lazy" frameborder="0"></iframe></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="code-modal" id="codeModal" aria-hidden="true"><div class="modal-toolbar"><strong id="codeModalTitle">Main.java</strong><button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button></div><textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea></div>
+  <script src="script.js"></script>
+</body>
+</html>

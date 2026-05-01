@@ -5,6 +5,11 @@ const eventValue = document.getElementById("eventValue");
 const positionValue = document.getElementById("positionValue");
 const copyCodeButton = document.getElementById("copyCodeButton");
 const javaSource = document.getElementById("javaSource");
+const expandCodeButton = document.getElementById("expandCodeButton");
+const closeCodeButton = document.getElementById("closeCodeButton");
+const expandedJavaSource = document.getElementById("expandedJavaSource");
+const codeModal = document.getElementById("codeModal");
+const codeModalTitle = document.getElementById("codeModalTitle");
 const startZoneTokens = document.getElementById("startZoneTokens");
 const diceIcon = document.getElementById("diceIcon");
 
@@ -229,6 +234,56 @@ if (copyCodeButton && javaSource) {
     }
   });
 }
+
+
+function openCodeModal(source, title = "Java snippet") {
+  if (!codeModal || !expandedJavaSource || !codeModalTitle) return;
+  expandedJavaSource.value = source;
+  codeModalTitle.textContent = title;
+  codeModal.classList.add("open");
+  codeModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  expandedJavaSource.focus();
+}
+
+function closeCodeModal() {
+  if (!codeModal) return;
+  codeModal.classList.remove("open");
+  codeModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  if (expandCodeButton) expandCodeButton.focus();
+}
+
+if (expandCodeButton && javaSource) {
+  expandCodeButton.addEventListener("click", () => {
+    openCodeModal(javaSource.value, "Main.java");
+  });
+}
+
+if (closeCodeButton) {
+  closeCodeButton.addEventListener("click", closeCodeModal);
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && codeModal && codeModal.classList.contains("open")) {
+    closeCodeModal();
+  }
+});
+
+document.querySelectorAll(".algorithm-copy pre, .snippet-source pre").forEach((pre, index) => {
+  const code = pre.querySelector("code");
+  if (!code) return;
+
+  const button = document.createElement("button");
+  button.className = "snippet-expand-button";
+  button.type = "button";
+  button.setAttribute("aria-label", "Expand code snippet");
+  button.innerHTML = '<span class="expand-icon" aria-hidden="true"></span>';
+  button.addEventListener("click", () => {
+    openCodeModal(code.textContent, `Snippet ${index + 1}`);
+  });
+  pre.appendChild(button);
+});
 
 window.addEventListener("load", () => {
   placeAllTokens();

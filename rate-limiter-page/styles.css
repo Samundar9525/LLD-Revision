@@ -36,7 +36,7 @@ body::before {
 }
 
 .page-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1500px, calc(100% - 48px));
   margin: 0 auto;
   position: relative;
   z-index: 1;
@@ -520,7 +520,7 @@ code { font-family: "Courier New", monospace; font-size: 0.94em; }
 }
 
 @media (max-width: 720px) {
-  .page-shell { width: min(100% - 18px, 1180px); }
+  .page-shell { width: min(100% - 18px, 1500px); }
 
   .topbar {
     gap: 14px;
@@ -533,4 +533,117 @@ code { font-family: "Courier New", monospace; font-size: 0.94em; }
   .hero-metrics { grid-template-columns: 1fr; }
   .timeline-step { grid-template-columns: 1fr; }
   .code-panel, .compiler-panel { min-height: auto; }
+}
+
+pre {
+  position: relative;
+}
+
+.snippet-expand-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fffaf3;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.expand-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
+
+.expand-icon::before,
+.expand-icon::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-color: currentColor;
+}
+
+.expand-icon::before {
+  top: 0;
+  right: 0;
+  border-top: 2px solid;
+  border-right: 2px solid;
+}
+
+.expand-icon::after {
+  left: 0;
+  bottom: 0;
+  border-left: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.code-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  border: 1px solid rgba(34, 27, 24, 0.1);
+  box-shadow: none;
+}
+
+.code-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  grid-template-rows: auto 1fr;
+  background: rgba(18, 15, 13, 0.98);
+  padding: 18px;
+}
+
+.code-modal.open {
+  display: grid;
+}
+
+.modal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  color: #fffaf3;
+  padding-bottom: 14px;
+}
+
+.modal-code {
+  width: 100%;
+  min-height: 0;
+  resize: none;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1512;
+  color: #f5fff9;
+  padding: 22px;
+  line-height: 1.58;
+  font-size: 1rem;
+  font-family: "Courier New", monospace;
+}
+
+body.modal-open {
+  overflow: hidden;
 }

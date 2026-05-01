@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parking Lot LLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand"><span class="brand-mark"></span><span>Parking Lot</span></div>
+        <div class="nav-group">
+          <button class="nav-pill button-pill" id="backButton" type="button">Back</button>
+          <a class="nav-pill" href="../index.html">Home</a>
+          <a class="nav-pill" href="#patterns">Patterns</a>
+          <a class="nav-pill" href="#run-code">Code</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Logic Behind The Code</p>
+          <h1>Parking lot LLD</h1>
+          <p class="hero-text">A visual low-level design walkthrough for floors, slots, vehicles, allocation, vacancy, and concurrency-safe slot updates.</p>
+          <div class="hero-actions">
+            <a class="cta primary" href="#patterns">See Patterns</a>
+            <a class="cta secondary" href="#run-code">Run Code</a>
+          </div>
+          <div class="hero-metrics">
+            <article><strong>2</strong><span>Sample floors</span></article>
+            <article><strong>3</strong><span>Vehicle types</span></article>
+            <article><strong>CAS</strong><span>Concurrent slot update</span></article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header"><span class="status-dot"></span><span>Live parking allocation</span></div>
+            <div class="garage-stage">
+              <div class="floor-label top">Floor 2</div>
+              <div class="floor-label bottom">Floor 1</div>
+              <div class="garage-grid" id="garageGrid">
+                <span class="slot car active">CAR</span>
+                <span class="slot bus">BUS</span>
+                <span class="slot bike">BIKE</span>
+                <span class="slot car">CAR</span>
+                <span class="slot bus active">BUS</span>
+                <span class="slot bike">BIKE</span>
+              </div>
+              <div class="vehicle-token" id="vehicleToken">CAR</div>
+              <div class="gate-line"></div>
+            </div>
+            <div class="turn-console">
+              <div class="console-row"><span>Vehicle</span><strong id="heroVehicle">CAR KA-01</strong></div>
+              <div class="console-row"><span>Target</span><strong id="heroTarget">Floor 1, Slot 4</strong></div>
+              <div class="console-row"><span>Rule</span><strong id="heroRule">Type match</strong></div>
+              <div class="console-row"><span>Status</span><strong id="heroStatus">Parked</strong></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="patterns">
+        <div class="section-heading"><p class="eyebrow">Design Intent</p><h2>What your code is doing</h2></div>
+        <div class="logic-grid">
+          <article class="info-card accent-orange reveal"><h3>Factory Pattern</h3><p><code>VehicleFactory</code> creates the correct vehicle object from <code>VehicleType</code>, keeping client creation logic clean.</p></article>
+          <article class="info-card accent-green reveal"><h3>Strategy-Like Floor Design</h3><p><code>ParkDesign</code> allows different floor layouts or parking-space generation strategies.</p></article>
+          <article class="info-card accent-blue reveal"><h3>Thread-Safe Allocation</h3><p><code>ConcurrentHashMap.replace</code> acts like compare-and-set, so two threads cannot claim the same slot at the same time.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="solid">
+        <div class="section-heading"><p class="eyebrow">Design Principles</p><h2>How SOLID appears in this design</h2></div>
+        <div class="timeline">
+          <article class="timeline-step reveal"><span class="step-number">01</span><div><h3>Single Responsibility</h3><p><code>Vehicle</code> owns vehicle data, <code>Slot</code> owns slot state, and <code>ParkingManager</code> coordinates floors and actions.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">02</span><div><h3>Open/Closed</h3><p>New vehicle types can be added by extending <code>Vehicle</code> and updating the factory/type configuration.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">03</span><div><h3>Encapsulation</h3><p>Slot occupancy is changed through <code>parkAt</code> and <code>vacate</code>, rather than allowing random external mutation.</p></div></article>
+          <article class="timeline-step reveal"><span class="step-number">04</span><div><h3>Concurrency Safety</h3><p>Parking a slot checks the current value and replaces it atomically only if the expected old value still exists.</p></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="flow">
+        <div class="section-heading"><p class="eyebrow">Request Flow</p><h2>How one parking request moves through the classes</h2></div>
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Vehicle Creation</p><h3>Factory creates vehicle from type</h3><p>The client passes type and plate. The factory returns the correct concrete vehicle.</p><pre><code>Vehicle vehicle = VehicleFactory.createVehicle(VehicleType.CAR, "KA-01");</code></pre></div><div class="algorithm-visual"><div class="visual-title">Interview answer</div><div class="reason-card">Factory centralizes object creation and avoids scattered switch logic in the client.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Parking Flow</p><h3>Manager finds floor and updates slot</h3><p>The manager checks the floor, reads the selected slot, verifies it is free, then atomically assigns the plate.</p><pre><code>boolean parked = manager.parkAt(1, 4, vehicle.getPlate());</code></pre></div><div class="algorithm-visual"><div class="visual-title">Runtime path</div><div class="flow-map"><span>Client</span><span>VehicleFactory</span><span>ParkingManager</span><span>Slot</span><span>VehicleInfo</span></div></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="deep-dive">
+        <div class="section-heading"><p class="eyebrow">Deep Design Walkthrough</p><h2>Why each major code decision exists</h2></div>
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">VehicleType Enum</p>
+              <h3>Define supported vehicle categories in one place</h3>
+              <p><code>VehicleType</code> acts like a contract between UI, factory, slot configuration, and pricing logic. The parking lot has different slot groups for <code>CAR</code>, <code>BUS</code>, and <code>BIKE</code>, so keeping these values as an enum avoids typo-based bugs from raw strings.</p>
+              <pre><code>enum VehicleType {
+    CAR, BUS, BIKE
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Problem it solves</div>
+              <div class="reason-card">Without an enum, one part of the code might use "Bike" and another might use "BIKE". That breaks matching. Enum keeps slot allocation type-safe.</div>
+              <div class="reason-card">Design principle: it supports Open/Closed partially. A new vehicle type is added in one controlled model instead of spreading magic strings everywhere.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Abstract Vehicle</p>
+              <h3>Use abstraction because all vehicles share state</h3>
+              <p>Your commented code considered an interface first. The final design uses an abstract class because every concrete vehicle needs common data: plate number and vehicle type. This avoids repeating the same fields and getters in <code>Car</code>, <code>Bus</code>, and <code>Bike</code>.</p>
+              <pre><code>abstract class Vehicle {
+    private final String plate;
+    private final VehicleType type;
+
+    protected Vehicle(String plate, VehicleType type) {
+        this.plate = plate;
+        this.type = type;
+    }
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Why not only interface?</div>
+              <div class="reason-card">Interface is good for behavior contracts. Here we also need shared state. Abstract class removes duplication while still allowing concrete vehicle types.</div>
+              <div class="reason-card">Design principle: DRY plus inheritance for common state. Each child only declares what makes it different: its type.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">VehicleInfo</p>
+              <h3>Represent slot capability and occupancy separately</h3>
+              <p><code>VehicleInfo</code> stores the slot type and the currently parked vehicle plate. When <code>value == null</code>, the slot is free. When <code>value</code> contains a plate, it is occupied.</p>
+              <pre><code>class VehicleInfo {
+    VehicleType type;
+    String value;
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Problem it solves</div>
+              <div class="reason-card">A slot has two different meanings: what kind of vehicle it accepts, and whether a vehicle is currently parked. This object keeps both together.</div>
+              <div class="reason-card">Design principle: encapsulating related state makes allocation logic easier to reason about.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Slot Initialization</p>
+              <h3>Pre-configure slot ranges by vehicle type</h3>
+              <p>The <code>Slot</code> constructor creates a floor layout. In your code, slots <code>1-19</code> are for cars, <code>21-49</code> are for buses, and <code>51-99</code> are for bikes.</p>
+              <pre><code>public Slot() {
+    initSlot(1, 20, VehicleType.CAR);
+    initSlot(21, 50, VehicleType.BUS);
+    initSlot(51, 100, VehicleType.BIKE);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Important interview note</div>
+              <div class="reason-card">The loop uses <code>i &lt; en</code>, so <code>initSlot(1, 20)</code> creates slots 1 through 19, not 1 through 20.</div>
+              <div class="reason-card">Design improvement: make this configurable later with floor config instead of hardcoding ranges.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">ConcurrentHashMap</p>
+              <h3>Protect slot state during parallel parking</h3>
+              <p>A real parking lot can have many entry points. Two vehicles may try to park in the same slot at nearly the same time. <code>ConcurrentHashMap</code> gives safe concurrent access to slot state.</p>
+              <pre><code>private ConcurrentHashMap&lt;Integer, VehicleInfo&gt; slotArray =
+    new ConcurrentHashMap&lt;&gt;();</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Problem it solves</div>
+              <div class="reason-card">Normal <code>HashMap</code> is unsafe when multiple threads read/write together. It can cause inconsistent state.</div>
+              <div class="reason-card">Design principle: thread safety belongs close to shared mutable data.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Atomic Allocation</p>
+              <h3>Use replace(old, new) to avoid double booking</h3>
+              <p>The allocation logic first reads the current slot value. It only replaces the slot if the value is still the same object. If another thread already parked there, replace fails.</p>
+              <pre><code>if (slotArray.replace(slot, current, newInfo)) {
+    allocated.add(slot);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Why this matters</div>
+              <div class="reason-card">This is compare-and-set style logic. It prevents two vehicles from occupying the same slot.</div>
+              <div class="reason-card">Design principle: correctness under concurrency. The check and update become one atomic operation.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">Vacate Logic</p>
+              <h3>Free a slot without changing its vehicle type</h3>
+              <p>When a vehicle exits, the slot should become free but still remain a car/bus/bike slot. That is why <code>vacate</code> creates new <code>VehicleInfo(current.type, null)</code>.</p>
+              <pre><code>VehicleInfo newInfo = new VehicleInfo(current.type, null);
+return slotArray.replace(slotNumber, current, newInfo);</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Problem it solves</div>
+              <div class="reason-card">Vacating should remove occupancy, not erase slot configuration.</div>
+              <div class="reason-card">Design principle: preserve invariant. Slot type is permanent; parked plate is temporary.</div>
+            </div>
+          </article>
+
+          <article class="algorithm-card reveal">
+            <div class="algorithm-copy">
+              <p class="algorithm-tag">ParkingManager</p>
+              <h3>Separate orchestration from raw slot storage</h3>
+              <p><code>ParkingManager</code> keeps a map of floor number to slot layout. It exposes high-level operations like availability, park, vacate, and print across floors.</p>
+              <pre><code>private final Map&lt;Integer, Slot&gt; floors = new LinkedHashMap&lt;&gt;();
+
+public void addFloor(int floorNumber, Slot slot) {
+    floors.put(floorNumber, slot);
+}</code></pre>
+            </div>
+            <div class="algorithm-visual">
+              <div class="visual-title">Problem it solves</div>
+              <div class="reason-card">The client should not manually inspect every floor and every slot. Manager gives one clean coordinator.</div>
+              <div class="reason-card">Design principle: Facade-like orchestration. The client calls intent-based methods.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="snippets">
+        <div class="section-heading"><p class="eyebrow">Code Walkthrough</p><h2>Explain each important snippet like an interview answer</h2></div>
+        <div class="algorithm-stack">
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Vehicle Abstraction</p><h3>Common data for all vehicles</h3><p>The abstract class avoids duplication because every vehicle has plate and type.</p><pre><code>abstract class Vehicle {
+    private final String plate;
+    private final VehicleType type;
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Design decision</div><div class="reason-card">Abstract class is better than interface here because we want shared state, not only behavior.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Slot Allocation</p><h3>Atomic replace prevents double booking</h3><p>The slot is assigned only if the old free value is still present.</p><pre><code>if (map.replace(slotNumber, current, newInfo)) {
+    return true;
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Concurrency note</div><div class="reason-card">This is compare-and-set style logic using ConcurrentHashMap.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Manager</p><h3>Coordinator for floors and parking actions</h3><p>The manager holds floor-to-slot mapping and exposes methods like park, vacate, and availability.</p><pre><code>private final Map&lt;Integer, Slot&gt; floors = new LinkedHashMap&lt;&gt;();
+
+public void addFloor(int floorNumber, Slot slot) {
+    floors.put(floorNumber, slot);
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Responsibility</div><div class="reason-card">Manager coordinates the use case, while Slot owns actual slot state.</div></div></article>
+          <article class="algorithm-card reveal"><div class="algorithm-copy"><p class="algorithm-tag">Vehicle Factory</p><h3>Create concrete vehicles at runtime</h3><p>The caller does not need to directly instantiate <code>Car</code>, <code>Bus</code>, or <code>Bike</code>.</p><pre><code>switch (type) {
+    case CAR: return new Car(noPlate);
+    case BUS: return new Bus(noPlate);
+    case BIKE: return new Bike(noPlate);
+}</code></pre></div><div class="algorithm-visual"><div class="visual-title">Pattern</div><div class="reason-card">This is Factory Pattern. It keeps creation logic in one place.</div></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading"><p class="eyebrow">Run The Code</p><h2>Read it here, run it in the embedded Java compiler</h2></div>
+        <div class="compiler-layout">
+          <article class="panel code-panel reveal">
+            <div class="code-panel-header"><div><h3>Java Source</h3><p class="compiler-note">Compiler-friendly version: no package line, no scanner input, and runnable class is <code>Main</code>.</p></div><div class="code-actions"><button class="copy-button" id="copyCodeButton" type="button">Copy code</button><button class="copy-button secondary-button icon-button" id="expandCodeButton" type="button" aria-label="Expand full code"><span class="expand-icon" aria-hidden="true"></span></button></div></div>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+enum VehicleType {
+    CAR, BUS, BIKE
+}
+
+abstract class Vehicle {
+    private final String plate;
+    private final VehicleType type;
+
+    protected Vehicle(String plate, VehicleType type) {
+        this.plate = plate;
+        this.type = type;
+    }
+
+    public String getPlate() { return plate; }
+    public VehicleType getType() { return type; }
+}
+
+class Car extends Vehicle { Car(String p) { super(p, VehicleType.CAR); } }
+class Bus extends Vehicle { Bus(String p) { super(p, VehicleType.BUS); } }
+class Bike extends Vehicle { Bike(String p) { super(p, VehicleType.BIKE); } }
+
+class VehicleInfo {
+    VehicleType type;
+    String value;
+
+    public VehicleInfo(VehicleType type, String value) {
+        this.type = type;
+        this.value = value;
+    }
+}
+
+class Slot {
+    private ConcurrentHashMap<Integer, VehicleInfo> slotArray = new ConcurrentHashMap<>();
+
+    public Slot() {
+        initSlot(1, 20, VehicleType.CAR);
+        initSlot(21, 50, VehicleType.BUS);
+        initSlot(51, 100, VehicleType.BIKE);
+    }
+
+    private void initSlot(int st, int en, VehicleType type) {
+        for (int i = st; i < en; i++) {
+            slotArray.put(i, new VehicleInfo(type, null));
+        }
+    }
+
+    public ConcurrentHashMap<Integer, VehicleInfo> getSlotArray() {
+        return slotArray;
+    }
+
+    public boolean vacate(int slotNumber) {
+        VehicleInfo current = slotArray.get(slotNumber);
+        if (current == null || current.value == null) return false;
+        VehicleInfo newInfo = new VehicleInfo(current.type, null);
+        return slotArray.replace(slotNumber, current, newInfo);
+    }
+}
+
+class ParkingManager {
+    private final Map<Integer, Slot> floors = new LinkedHashMap<>();
+
+    public void addFloor(int floorNumber, Slot slot) {
+        floors.put(floorNumber, slot);
+    }
+
+    public List<Integer> getAvailableSlots(int floorNumber, VehicleType type) {
+        Slot slot = floors.get(floorNumber);
+        List<Integer> available = new ArrayList<>();
+        if (slot == null) return available;
+        for (Map.Entry<Integer, VehicleInfo> entry : slot.getSlotArray().entrySet()) {
+            VehicleInfo info = entry.getValue();
+            if (info != null && info.type == type && info.value == null) {
+                available.add(entry.getKey());
+            }
+        }
+        Collections.sort(available);
+        return available;
+    }
+
+    public boolean parkAt(int floorNumber, int slotNumber, String plate) {
+        Slot slot = floors.get(floorNumber);
+        if (slot == null) return false;
+        ConcurrentHashMap<Integer, VehicleInfo> map = slot.getSlotArray();
+        VehicleInfo current = map.get(slotNumber);
+        if (current == null || current.value != null) return false;
+        VehicleInfo newInfo = new VehicleInfo(current.type, plate);
+        return map.replace(slotNumber, current, newInfo);
+    }
+
+    public boolean vacate(int floorNumber, int slotNumber) {
+        Slot slot = floors.get(floorNumber);
+        if (slot == null) return false;
+        return slot.vacate(slotNumber);
+    }
+
+    public void printAvailabilityAcrossFloors() {
+        for (Map.Entry<Integer, Slot> floorEntry : floors.entrySet()) {
+            int floorNum = floorEntry.getKey();
+            System.out.println("\nFloor " + floorNum + " availability:");
+            Map<VehicleType, List<Integer>> available = new EnumMap<>(VehicleType.class);
+            Map<VehicleType, List<String>> occupied = new EnumMap<>(VehicleType.class);
+            for (VehicleType type : VehicleType.values()) {
+                available.put(type, new ArrayList<>());
+                occupied.put(type, new ArrayList<>());
+            }
+            for (Map.Entry<Integer, VehicleInfo> entry : floorEntry.getValue().getSlotArray().entrySet()) {
+                int slotNum = entry.getKey();
+                VehicleInfo info = entry.getValue();
+                if (info.value == null) {
+                    available.get(info.type).add(slotNum);
+                } else {
+                    occupied.get(info.type).add("slot " + slotNum + " -> " + info.value);
+                }
+            }
+            for (VehicleType type : VehicleType.values()) {
+                Collections.sort(available.get(type));
+                System.out.println(type + " available = " + available.get(type));
+                System.out.println(type + " occupied = " + occupied.get(type));
+            }
+        }
+    }
+}
+
+class VehicleFactory {
+    public static Vehicle createVehicle(VehicleType type, String noPlate) {
+        switch (type) {
+            case CAR: return new Car(noPlate);
+            case BUS: return new Bus(noPlate);
+            case BIKE: return new Bike(noPlate);
+            default: throw new IllegalArgumentException("Unsupported vehicle type: " + type);
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        ParkingManager manager = new ParkingManager();
+        manager.addFloor(1, new Slot());
+        manager.addFloor(2, new Slot());
+
+        Vehicle car = VehicleFactory.createVehicle(VehicleType.CAR, "KA-01-CAR");
+        Vehicle bus = VehicleFactory.createVehicle(VehicleType.BUS, "DL-22-BUS");
+        Vehicle bike = VehicleFactory.createVehicle(VehicleType.BIKE, "MH-09-BIKE");
+
+        System.out.println("Initial availability");
+        manager.printAvailabilityAcrossFloors();
+
+        parkAndPrint(manager, 1, 4, car);
+        parkAndPrint(manager, 1, 25, bus);
+        parkAndPrint(manager, 2, 55, bike);
+
+        System.out.println("\nAfter parking");
+        manager.printAvailabilityAcrossFloors();
+
+        System.out.println("\nVacating floor 1 slot 4: " + manager.vacate(1, 4));
+        manager.printAvailabilityAcrossFloors();
+    }
+
+    private static void parkAndPrint(ParkingManager manager, int floor, int slot, Vehicle vehicle) {
+        boolean parked = manager.parkAt(floor, slot, vehicle.getPlate());
+        System.out.println("Park " + vehicle.getPlate() + " at floor " + floor + " slot " + slot + " -> " + parked);
+    }
+}</textarea>
+          </article>
+          <article class="panel compiler-panel reveal"><h3>Embedded Compiler</h3><p class="compiler-note">Copy the Java source on the left and paste it into the compiler. It runs sample parking, availability, and vacate operations automatically.</p><iframe class="compiler-frame" title="Embedded Java Compiler" src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true" loading="lazy" frameborder="0"></iframe></article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="code-modal" id="codeModal" aria-hidden="true"><div class="modal-toolbar"><strong id="codeModalTitle">Main.java</strong><button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button></div><textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea></div>
+  <script src="script.js"></script>
+</body>
+</html>
