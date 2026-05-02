@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Splitwise LLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <button class="back-button" id="backButton" type="button" aria-label="Go back">
+          <span class="back-icon" aria-hidden="true"></span>
+        </button>
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <span>Splitwise LLD</span>
+        </div>
+        <div class="nav-group">
+          <a class="nav-pill" href="../index.html">Home</a>
+          <a class="nav-pill" href="#flow">Flow</a>
+          <a class="nav-pill" href="#patterns">Patterns</a>
+          <a class="nav-pill" href="#run-code">Code</a>
+        </div>
+      </nav>
+
+      <div class="hero-grid">
+        <section class="hero-copy">
+          <p class="eyebrow">Senior Design Review</p>
+          <h1>Splitwise LLD</h1>
+          <p class="hero-text">
+            A careful walkthrough of the expense-splitting design: users join a group, expenses are split
+            by strategy, the group ledger stores net balances, and settlement moves users back toward zero.
+          </p>
+
+          <div class="hero-actions">
+            <a class="cta primary" href="#patterns">See Design Patterns</a>
+            <a class="cta secondary" href="#run-code">Open Code</a>
+          </div>
+
+          <div class="hero-metrics">
+            <article>
+              <strong>Strategy</strong>
+              <span>Split calculation</span>
+            </article>
+            <article>
+              <strong>Singleton</strong>
+              <span>Application service</span>
+            </article>
+            <article>
+              <strong>Ledger</strong>
+              <span>Group-wise balance</span>
+            </article>
+          </div>
+        </section>
+
+        <aside class="hero-visual">
+          <div class="visual-card">
+            <div class="visual-header">
+              <span class="status-dot"></span>
+              <span>Live balance movement</span>
+            </div>
+
+            <div class="split-stage">
+              <div class="payer-card">
+                <span>Paid by</span>
+                <strong id="heroPayer">SAM</strong>
+                <small><b id="heroAmount">1000</b> added</small>
+              </div>
+
+              <div class="split-router">
+                <span id="heroStrategy">EqualSplit</span>
+                <small id="heroRule">3 equal shares</small>
+                <div class="router-pulse"></div>
+              </div>
+
+              <div class="share-card">
+                <span>Share deducted</span>
+                <div class="share-row">
+                  <em>SAM</em>
+                  <strong id="samShare">-333.33</strong>
+                </div>
+                <div class="share-row">
+                  <em>PAM</em>
+                  <strong id="pamShare">-333.33</strong>
+                </div>
+                <div class="share-row">
+                  <em>Kris</em>
+                  <strong id="krisShare">-333.33</strong>
+                </div>
+              </div>
+
+              <div class="ledger-card">
+                <span>Group Ledger</span>
+                <div class="ledger-row">
+                  <em>SAM</em>
+                  <strong id="samBalance">+666.67</strong>
+                </div>
+                <div class="ledger-row">
+                  <em>PAM</em>
+                  <strong id="pamBalance">-333.33</strong>
+                </div>
+                <div class="ledger-row">
+                  <em>Kris</em>
+                  <strong id="krisBalance">-333.33</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="event-strip">
+              <div class="event-pill active" id="eventExpense">Expense added</div>
+              <div class="event-pill" id="eventSplit">Split calculated</div>
+              <div class="event-pill" id="eventLedger">Ledger updated</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="flow">
+        <div class="section-heading">
+          <p class="eyebrow">What The Code Does</p>
+          <h2>The design is centered around a group ledger</h2>
+        </div>
+
+        <div class="logic-grid">
+          <article class="info-card">
+            <span class="card-number">01</span>
+            <h3>User and Group membership</h3>
+            <p>
+              `User` represents identity. `GroupManager` owns the users inside one group and initializes each user's
+              group balance at zero. Overriding `equals()` and `hashCode()` is important because users are map keys.
+            </p>
+          </article>
+          <article class="info-card accent-blue">
+            <span class="card-number">02</span>
+            <h3>Expense creation</h3>
+            <p>
+              When an expense is added, the service asks the selected split strategy to produce a user-to-share map.
+              The expense is then stored with paid-by, amount, and split details.
+            </p>
+          </article>
+          <article class="info-card accent-green">
+            <span class="card-number">03</span>
+            <h3>Balance update</h3>
+            <p>
+              The payer receives credit for the full amount. Every participant is debited by their share. The final
+              number is net balance: positive means receive, negative means pay.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="patterns">
+        <div class="section-heading">
+          <p class="eyebrow">Pattern Analysis</p>
+          <h2>Why these design patterns fit the Splitwise problem</h2>
+        </div>
+
+        <div class="pattern-stack">
+          <article class="pattern-card reveal">
+            <div>
+              <p class="pattern-tag">Strategy Pattern</p>
+              <h3>SplitStrategy, EqualSplit, PercentageSplit</h3>
+              <p>
+                The algorithm for calculating shares changes depending on the expense type. Equal and percentage split
+                should not be hard-coded inside `GroupManager`; that would make the group class grow every time a new
+                split type is introduced. Strategy keeps the calculation replaceable.
+              </p>
+            </div>
+            <pre><code>interface SplitStrategy {
+    Map&lt;User, Double&gt; splitAmount(double amount, List&lt;User&gt; users);
+}
+
+class EqualSplit implements SplitStrategy {
+    public Map&lt;User, Double&gt; splitAmount(double amount, List&lt;User&gt; users) {
+        double perUserAmount = amount / users.size();
+        Map&lt;User, Double&gt; result = new HashMap&lt;&gt;();
+        for (User user : users) {
+            result.put(user, perUserAmount);
+        }
+        return result;
+    }
+}</code></pre>
+          </article>
+
+          <article class="pattern-card reveal">
+            <div>
+              <p class="pattern-tag">Singleton Pattern</p>
+              <h3>SplitwiseService</h3>
+              <p>
+                `SplitwiseService` is the application entry point for adding expenses and settling up. In this simplified
+                in-memory version, a Singleton gives one shared coordinator. In production, this can become a
+                dependency-injected service instead of a static Singleton.
+              </p>
+            </div>
+            <pre><code>class SplitwiseService {
+    private static SplitwiseService instance;
+
+    private SplitwiseService() {}
+
+    public static synchronized SplitwiseService getInstance() {
+        if (instance == null) {
+            instance = new SplitwiseService();
+        }
+        return instance;
+    }
+}</code></pre>
+          </article>
+
+          <article class="pattern-card reveal">
+            <div>
+              <p class="pattern-tag">Ledger Model</p>
+              <h3>Group-wise balance tracking</h3>
+              <p>
+                The balance sheet is the core Splitwise logic. The balance sheet is not storing each transaction as debt
+                edges. It stores net group balance per user, which makes profile and group summaries fast to display.
+              </p>
+            </div>
+            <pre><code>private void updateBalanceSheet(User paidBy, double amount, Map&lt;User, Double&gt; splitMap) {
+    balanceSheet.put(paidBy, balanceSheet.getOrDefault(paidBy, 0.0) + amount);
+
+    for (Map.Entry&lt;User, Double&gt; entry : splitMap.entrySet()) {
+        User user = entry.getKey();
+        double share = entry.getValue();
+        balanceSheet.put(user, balanceSheet.getOrDefault(user, 0.0) - share);
+    }
+}</code></pre>
+          </article>
+
+          <article class="pattern-card reveal">
+            <div>
+              <p class="pattern-tag">Thread Safety Boundary</p>
+              <h3>synchronized group mutations</h3>
+              <p>
+                Expense addition, user removal, and settlement mutate shared group state. Marking these methods
+                `synchronized` ensures a single group ledger update completes before another thread changes the same
+                ledger. This protects the balance sheet from race conditions in this in-memory design.
+              </p>
+            </div>
+            <pre><code>public synchronized void addExpense(...) {
+    Map&lt;User, Double&gt; splitMap = splitStrategy.splitAmount(amount, users);
+    expenses.add(new Expense(expenseId, paidBy, amount, splitMap));
+    updateBalanceSheet(paidBy, amount, splitMap);
+}</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Execution Trace</p>
+          <h2>How the balance changes in the sample</h2>
+        </div>
+
+        <div class="trace-grid">
+          <article class="trace-card">
+            <strong>EXP01</strong>
+            <h3>SAM pays 1000 equally</h3>
+            <p>SAM gets credited 1000, then pays his own share 333.33. Net SAM: +666.67. PAM and Kris: -333.33 each.</p>
+          </article>
+          <article class="trace-card">
+            <strong>EXP02</strong>
+            <h3>Kris pays 4000 equally</h3>
+            <p>Kris gets credited 4000 and owes 1333.33 share. His net gain is +2666.67, then it merges with old balance.</p>
+          </article>
+          <article class="trace-card">
+            <strong>EXP03</strong>
+            <h3>PAM pays 2000 by percentage</h3>
+            <p>The strategy maps SAM to 10%, PAM to 40%, and Kris to 50%. This keeps custom split logic outside the group ledger.</p>
+          </article>
+          <article class="trace-card">
+            <strong>Settle Up</strong>
+            <h3>PAM pays Kris 1000</h3>
+            <p>PAM's balance moves up by 1000 because she paid. Kris's balance moves down by 1000 because he received.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="run-code">
+        <div class="section-heading">
+          <p class="eyebrow">Runnable Java</p>
+          <h2>Full code from the walkthrough</h2>
+        </div>
+
+        <div class="compiler-layout">
+          <article class="code-panel reveal">
+            <div class="code-panel-header">
+              <div>
+                <h3>Main.java</h3>
+                <p class="compiler-note">The compiler-ready code demonstrates equal split, percentage split, group-wise ledger, and settlement.</p>
+              </div>
+              <div class="code-actions">
+                <button class="copy-button" id="copyCodeButton" type="button">Copy code</button>
+                <button class="copy-button secondary-button" id="expandCodeButton" type="button">Expand</button>
+              </div>
+            </div>
+            <textarea id="javaSource" class="code-textarea" spellcheck="false" readonly>import java.util.*;
+
+class User {
+    private final String id;
+    private final String name;
+
+    public User(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+
+    @Override
+    public String toString() {
+        return "{Id='" + id + "', Name='" + name + "'}";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof User)) return false;
+        User other = (User) obj;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+interface Group {
+    void addUser(User user);
+    void removeUser(User user);
+}
+
+interface SplitStrategy {
+    Map<User, Double> splitAmount(double amount, List<User> users);
+}
+
+class EqualSplit implements SplitStrategy {
+    @Override
+    public Map<User, Double> splitAmount(double amount, List<User> users) {
+        if (users == null || users.isEmpty()) {
+            throw new IllegalArgumentException("Users list cannot be empty");
+        }
+
+        double perUserAmount = amount / users.size();
+        Map<User, Double> result = new HashMap<>();
+
+        for (User user : users) {
+            result.put(user, perUserAmount);
+        }
+
+        return result;
+    }
+}
+
+class PercentageSplit implements SplitStrategy {
+    private final Map<User, Integer> userPercentage;
+
+    public PercentageSplit(Map<User, Integer> userPercentage) {
+        this.userPercentage = userPercentage;
+    }
+
+    @Override
+    public Map<User, Double> splitAmount(double amount, List<User> users) {
+        if (userPercentage == null || userPercentage.isEmpty()) {
+            throw new IllegalArgumentException("Percentage map cannot be empty");
+        }
+
+        int totalPercentage = userPercentage.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalPercentage != 100) {
+            throw new IllegalArgumentException("Percentages must sum to 100");
+        }
+
+        Map<User, Double> result = new HashMap<>();
+        for (Map.Entry<User, Integer> entry : userPercentage.entrySet()) {
+            result.put(entry.getKey(), amount * entry.getValue() / 100.0);
+        }
+        return result;
+    }
+}
+
+class Expense {
+    private final String expenseId;
+    private final User paidBy;
+    private final double amount;
+    private final Map<User, Double> splitMap;
+
+    public Expense(String expenseId, User paidBy, double amount, Map<User, Double> splitMap) {
+        this.expenseId = expenseId;
+        this.paidBy = paidBy;
+        this.amount = amount;
+        this.splitMap = splitMap;
+    }
+
+    public String getExpenseId() { return expenseId; }
+    public User getPaidBy() { return paidBy; }
+    public double getAmount() { return amount; }
+    public Map<User, Double> getSplitMap() { return splitMap; }
+}
+
+class GroupManager implements Group {
+    private final String groupId;
+    private final String groupName;
+    private final List<User> users = new ArrayList<>();
+    private final List<Expense> expenses = new ArrayList<>();
+    private final Map<User, Double> balanceSheet = new HashMap<>();
+
+    public GroupManager(String groupId, String groupName) {
+        this.groupId = groupId;
+        this.groupName = groupName;
+    }
+
+    @Override
+    public synchronized void addUser(User user) {
+        if (!users.contains(user)) {
+            users.add(user);
+            balanceSheet.putIfAbsent(user, 0.0);
+        }
+    }
+
+    @Override
+    public synchronized void removeUser(User user) {
+        if (Math.abs(balanceSheet.getOrDefault(user, 0.0)) > 0.001) {
+            throw new IllegalStateException("User cannot be removed because balance is not settled");
+        }
+        users.remove(user);
+        balanceSheet.remove(user);
+    }
+
+    public List<User> getUsers() { return users; }
+
+    public synchronized void addExpense(String expenseId, User paidBy, double amount, SplitStrategy splitStrategy) {
+        if (!users.contains(paidBy)) {
+            throw new IllegalArgumentException("Paid by user is not part of this group");
+        }
+
+        Map<User, Double> splitMap = splitStrategy.splitAmount(amount, users);
+        for (User user : splitMap.keySet()) {
+            if (!users.contains(user)) {
+                throw new IllegalArgumentException(user.getName() + " is not part of this group");
+            }
+        }
+
+        Expense expense = new Expense(expenseId, paidBy, amount, splitMap);
+        expenses.add(expense);
+        updateBalanceSheet(paidBy, amount, splitMap);
+    }
+
+    private void updateBalanceSheet(User paidBy, double amount, Map<User, Double> splitMap) {
+        balanceSheet.put(paidBy, balanceSheet.getOrDefault(paidBy, 0.0) + amount);
+        for (Map.Entry<User, Double> entry : splitMap.entrySet()) {
+            balanceSheet.put(entry.getKey(), balanceSheet.getOrDefault(entry.getKey(), 0.0) - entry.getValue());
+        }
+    }
+
+    public synchronized void settleUp(User payer, User receiver, double amount) {
+        if (!users.contains(payer) || !users.contains(receiver)) {
+            throw new IllegalArgumentException("Both users must be part of this group");
+        }
+        balanceSheet.put(payer, balanceSheet.getOrDefault(payer, 0.0) + amount);
+        balanceSheet.put(receiver, balanceSheet.getOrDefault(receiver, 0.0) - amount);
+    }
+
+    public void showGroupBalance() {
+        System.out.println("\nBalance Sheet for Group: " + groupName);
+        for (User user : users) {
+            double balance = balanceSheet.getOrDefault(user, 0.0);
+            if (balance > 0.001) {
+                System.out.println(user.getName() + " should receive: " + round(balance));
+            } else if (balance < -0.001) {
+                System.out.println(user.getName() + " should pay: " + round(Math.abs(balance)));
+            } else {
+                System.out.println(user.getName() + " is settled");
+            }
+        }
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+}
+
+class SplitwiseService {
+    private static SplitwiseService instance;
+    private SplitwiseService() {}
+
+    public static synchronized SplitwiseService getInstance() {
+        if (instance == null) {
+            instance = new SplitwiseService();
+        }
+        return instance;
+    }
+
+    public void addExpense(GroupManager group, String expenseId, User paidBy, double amount, SplitStrategy splitStrategy) {
+        group.addExpense(expenseId, paidBy, amount, splitStrategy);
+    }
+
+    public void settleUp(GroupManager group, User payer, User receiver, double amount) {
+        group.settleUp(payer, receiver, amount);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        User sam = new User("ID01", "SAM");
+        User pam = new User("ID03", "PAM");
+        User kris = new User("ID04", "Kris");
+
+        GroupManager friendGroup = new GroupManager("G01", "Friends Group");
+        friendGroup.addUser(sam);
+        friendGroup.addUser(pam);
+        friendGroup.addUser(kris);
+
+        SplitwiseService service = SplitwiseService.getInstance();
+        service.addExpense(friendGroup, "EXP01", sam, 1000, new EqualSplit());
+        friendGroup.showGroupBalance();
+
+        service.addExpense(friendGroup, "EXP02", kris, 4000, new EqualSplit());
+        friendGroup.showGroupBalance();
+
+        Map<User, Integer> percentageMap = new HashMap<>();
+        percentageMap.put(sam, 10);
+        percentageMap.put(pam, 40);
+        percentageMap.put(kris, 50);
+
+        service.addExpense(friendGroup, "EXP03", pam, 2000, new PercentageSplit(percentageMap));
+        friendGroup.showGroupBalance();
+
+        service.settleUp(friendGroup, pam, kris, 1000);
+        friendGroup.showGroupBalance();
+    }
+}</textarea>
+          </article>
+
+          <article class="compiler-panel reveal">
+            <h3>Embedded Compiler</h3>
+            <p class="compiler-note">Paste the Java source into the compiler and run the sample flow.</p>
+            <iframe class="compiler-frame" title="Embedded Java Compiler" src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true" loading="lazy" frameborder="0"></iframe>
+            <h3 class="notes-title">Design Review Notes</h3>
+            <div class="note-list">
+              <p><strong>Good:</strong> Split calculation is separated from balance tracking.</p>
+              <p><strong>Good:</strong> `User` is safe as a map key because identity methods are implemented.</p>
+              <p><strong>Good:</strong> Group mutations are synchronized for this in-memory implementation.</p>
+              <p><strong>Next:</strong> Add an Observer-based notification system when expenses and settlements occur.</p>
+              <p><strong>Next:</strong> Add an `ExactSplit` strategy and a settlement optimizer for minimum transactions.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="code-modal" id="codeModal" aria-hidden="true">
+    <div class="modal-toolbar">
+      <strong id="codeModalTitle">Main.java</strong>
+      <button class="copy-button secondary-button" id="closeCodeButton" type="button">Close</button>
+    </div>
+    <textarea id="expandedJavaSource" class="modal-code" spellcheck="false" readonly></textarea>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
