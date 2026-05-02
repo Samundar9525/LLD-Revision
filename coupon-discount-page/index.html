@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../interview-notes.css">
 </head>
 <body>
   <div class="page-shell">
@@ -24,6 +25,7 @@
           <a class="nav-pill" href="../index.html">Home</a>
           <a class="nav-pill" href="#patterns">Patterns</a>
           <a class="nav-pill" href="#run-code">Code</a>
+          <a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -525,6 +527,142 @@ public class Main {
               frameborder="0"></iframe>
           </article>
         </div>
+      </section>
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Coupon Discount LLD models coupon creation and discount application separately. A coupon owns
+              metadata like code, type, and validity, while the actual discount calculation is delegated to a
+              `DiscountStrategy`. That keeps business rules modular and lets the system support flat, percentage,
+              cashback, category-based, or user-specific discounts without changing the coupon entity.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Coupon discount flow diagram">
+                <div class="flow-node">Client requests coupon</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">CouponFactory creates coupon</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">CouponService validates coupon</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Pick DiscountStrategy</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Apply discount to cart amount</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Return final payable amount</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Coupon UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row">
+                  <div class="uml-box interface">DiscountStrategy</div>
+                  <div class="uml-branch">
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">FlatDiscount</div>
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">PercentageDiscount</div>
+                  </div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">Coupon</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box interface">DiscountStrategy</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">CouponService</div>
+                  <div class="uml-link hasa">HAS-A / USES</div>
+                  <div class="uml-box class-box">Coupon</div>
+                  <div class="uml-link hasa">USES</div>
+                  <div class="uml-box class-box">CouponFactory</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>DiscountStrategy:</strong> common contract for all discount calculations.</li>
+              <li><strong>FlatDiscount:</strong> applies a fixed amount reduction.</li>
+              <li><strong>PercentageDiscount:</strong> applies a percentage-based reduction.</li>
+              <li><strong>Coupon:</strong> stores coupon metadata and delegates calculation to the strategy.</li>
+              <li><strong>CouponFactory:</strong> centralizes coupon object creation.</li>
+              <li><strong>CouponService:</strong> coordinates validation and application of coupons.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              Strategy Pattern is used because the discount formula is the part that changes most often. A flat
+              discount, percentage discount, cashback, category discount, bank offer, or loyalty discount all calculate
+              the final amount differently, but the caller should not care about the exact formula. By depending on
+              `DiscountStrategy`, the coupon system follows Open/Closed Principle: new discount behavior can be added
+              through a new class instead of modifying existing service logic.
+            </p>
+            <p>
+              Factory Pattern is useful because coupon creation can become complex. In real systems, coupon creation
+              may depend on coupon type, expiry, minimum cart value, user segment, product category, and strategy
+              selection. A factory centralizes that construction logic so the client does not manually wire every
+              coupon object.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              The coupon application algorithm is: receive cart amount and coupon code, validate whether the coupon is
+              active and eligible, select the correct discount strategy, calculate discount, cap the discount if needed,
+              and return the final payable amount. In the current demo, the calculation is simple, but the same flow
+              scales to production rules.
+            </p>
+            <p>
+              For a flat discount, the algorithm subtracts a fixed value from the amount. For a percentage discount, it
+              computes `amount * percentage / 100` and subtracts that value. In production, this should include
+              safeguards such as not allowing the payable amount to go below zero and applying a maximum discount cap.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would separate coupon metadata from discount calculation. The coupon object represents the offer,
+              while discount formulas are implemented as strategies. This keeps the design open for new coupon types
+              without modifying the core coupon or service logic."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Use money-safe representation such as paise/cents or `BigDecimal`.</li>
+              <li>Add eligibility rules for users, products, categories, minimum cart value, and expiry.</li>
+              <li>Add conflict policy for stacking multiple coupons.</li>
+              <li>Persist coupon usage and enforce redemption limits.</li>
+              <li>Add audit logs for applied and rejected coupons.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The demo is good for LLD, but a production coupon system needs richer validation, usage tracking,
+              concurrency control on redemption count, and precise currency handling.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>

@@ -25,6 +25,7 @@
           <a class="nav-pill" href="#flow">Flow</a>
           <a class="nav-pill" href="#patterns">Patterns</a>
           <a class="nav-pill" href="#run-code">Code</a>
+          <a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -553,6 +554,190 @@ public class Main {
             </div>
           </article>
         </div>
+      </section>
+
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Splitwise LLD is centered around a group ledger. Users join a group, expenses are added by one payer,
+              and the selected split strategy calculates how much each participant owes. The group maintains a net
+              balance sheet where positive means the user should receive, negative means the user should pay, and zero
+              means the user is settled.
+            </p>
+            <p>
+              The key interview point is that split logic is not hard-coded inside the group. It is delegated to
+              `SplitStrategy`, so Equal, Percentage, Exact, or Share split can be added without changing the core
+              ledger update logic.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Splitwise expense flow diagram">
+                <div class="flow-node">User adds expense</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Validate payer and group members</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Apply SplitStrategy</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Create Expense record</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Credit payer full amount</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Debit every participant share</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Update group balance sheet</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Splitwise UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row top">
+                  <div class="uml-box interface">Group</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">GroupManager</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-stack">
+                    <div class="uml-box">List&lt;User&gt;</div>
+                    <div class="uml-box">List&lt;Expense&gt;</div>
+                    <div class="uml-box">Map&lt;User, Double&gt;</div>
+                  </div>
+                </div>
+
+                <div class="uml-row">
+                  <div class="uml-box interface">SplitStrategy</div>
+                  <div class="uml-branch">
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">EqualSplit</div>
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">PercentageSplit</div>
+                  </div>
+                </div>
+
+                <div class="uml-row">
+                  <div class="uml-box class-box">Expense</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-stack">
+                    <div class="uml-box">paidBy: User</div>
+                    <div class="uml-box">splitMap: Map&lt;User, Double&gt;</div>
+                  </div>
+                </div>
+
+                <div class="uml-row">
+                  <div class="uml-box class-box">SplitwiseService</div>
+                  <div class="uml-link hasa">HAS-A / USES</div>
+                  <div class="uml-box class-box">GroupManager</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>User:</strong> represents identity using `id` and `name`; equality is based on `id` because users are map keys.</li>
+              <li><strong>Expense:</strong> stores expense id, payer, amount, and calculated user-to-share map.</li>
+              <li><strong>GroupManager:</strong> owns users, expenses, balance sheet, expense updates, and settlement.</li>
+              <li><strong>SplitStrategy:</strong> abstracts split calculation through `EqualSplit` and `PercentageSplit`.</li>
+              <li><strong>SplitwiseService:</strong> acts as the application coordinator in this in-memory version.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Balance logic</h3>
+            <p>
+              When SAM pays `1000` for three people, each share is `333.33`. SAM gets credited with `1000`, then SAM,
+              PAM, and Kris are each debited by `333.33`. Final balance: SAM receives `666.67`, PAM pays `333.33`,
+              and Kris pays `333.33`.
+            </p>
+            <p>
+              During settlement, if PAM pays Kris `1000`, PAM's balance increases because her debt reduces, and Kris's
+              balance decreases because his receivable reduces.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Design patterns</h3>
+            <ul class="notes-list">
+              <li><strong>Strategy Pattern:</strong> keeps split calculation replaceable and open for extension.</li>
+              <li><strong>Singleton Pattern:</strong> gives one shared `SplitwiseService` coordinator for the demo.</li>
+              <li><strong>Ledger Model:</strong> stores net balances instead of pairwise debt edges.</li>
+              <li><strong>Synchronized methods:</strong> protect in-memory group mutations from race conditions.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              The main changing behavior in Splitwise is how an expense is divided. Equal split, percentage split,
+              exact split, and share split all produce the same output type: a map of user to amount owed. Strategy
+              Pattern is used because the group should not contain `if-else` blocks for every split type. If a new
+              split type is introduced, we add a new strategy class and the balance update logic remains untouched.
+            </p>
+            <p>
+              The ledger model is used because the UI usually needs to answer "how much does this user owe or receive?"
+              quickly. Instead of storing every pairwise debt edge, we maintain one net value per user inside the group.
+              This makes group summaries simple. Pairwise settlement can be derived later using a separate settlement
+              optimization algorithm.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              The expense update algorithm has two phases. First, the split strategy calculates each participant's
+              share. Second, the ledger is updated by crediting the payer with the full amount and debiting every user
+              by their share. This works because the payer also participates in the split, so their final net balance
+              becomes `amount paid - own share`.
+            </p>
+            <p>
+              Settlement uses a reverse adjustment. If a debtor pays a receiver, the payer's balance increases toward
+              zero and the receiver's balance decreases toward zero. For minimum transactions, a production system can
+              separate positive balances and negative balances, then greedily match the largest payer with the largest
+              receiver until all balances become zero.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would model Splitwise at the group level. Each group has users, expenses, and a balance sheet. When an
+              expense is added, the payer gets credited with the full amount and every participant gets debited by their
+              share. Split calculation is delegated to a strategy, so new split types can be added without modifying the
+              group ledger logic."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Use `BigDecimal` or smallest currency unit instead of `double` for money.</li>
+              <li>Add `ExactSplit`, `ShareSplit`, and a settlement optimizer for minimum transactions.</li>
+              <li>Persist users, groups, expenses, and settlements in a database.</li>
+              <li>Add access control so only group members can add expenses.</li>
+              <li>Add Observer-based notifications when expenses or settlements occur.</li>
+              <li>Replace Singleton with dependency injection in a production service.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The current implementation uses `double`, which is risky for money because of precision issues. Also,
+              `PercentageSplit` checks that percentages sum to `100`, but it should more strictly validate that the
+              percentage map matches the group members.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>

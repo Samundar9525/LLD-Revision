@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../interview-notes.css">
 </head>
 <body>
   <div class="page-shell">
@@ -19,6 +20,7 @@
           <a class="nav-pill" href="../index.html">Home</a>
           <a class="nav-pill" href="#patterns">Patterns</a>
           <a class="nav-pill" href="#run-code">Code</a>
+          <a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -433,6 +435,149 @@ public class Main {
           </article>
           <article class="panel compiler-panel reveal"><h3>Embedded Compiler</h3><p class="compiler-note">Copy the Java source on the left and paste it into the compiler. It runs sample parking, availability, and vacate operations automatically.</p><iframe class="compiler-frame" title="Embedded Java Compiler" src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true" loading="lazy" frameborder="0"></iframe></article>
         </div>
+      </section>
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Parking Lot LLD models the system around floors, slots, vehicles, and a parking manager. Vehicles
+              share common data through an abstract `Vehicle` class, while concrete vehicle types like `Car`, `Bus`,
+              and `Bike` extend it. `ParkingManager` coordinates allocation and vacancy, and each floor owns slot
+              state through `Slot`.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Parking lot flow diagram">
+                <div class="flow-node">Vehicle enters parking lot</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">VehicleFactory creates vehicle</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">ParkingManager scans floors</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Slot checks vehicle type availability</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Atomic replace reserves slot</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Ticket / assigned slot returned</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Parking lot UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row">
+                  <div class="uml-box class-box">Vehicle</div>
+                  <div class="uml-branch">
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">Car</div>
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">Bike</div>
+                  </div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">ParkingManager</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">Map&lt;Floor, Slot&gt;</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box class-box">Slot</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">Slot</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">ConcurrentHashMap&lt;Integer, VehicleInfo&gt;</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">VehicleFactory</div>
+                  <div class="uml-link hasa">CREATES</div>
+                  <div class="uml-box class-box">Vehicle</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>Vehicle:</strong> abstract base class for common vehicle state like plate and type.</li>
+              <li><strong>Car, Bus, Bike:</strong> concrete vehicle classes with specific `VehicleType`.</li>
+              <li><strong>VehicleInfo:</strong> stores slot occupancy details.</li>
+              <li><strong>Slot:</strong> manages slot availability and assignment for a floor.</li>
+              <li><strong>ParkingManager:</strong> coordinates floors and parking operations.</li>
+              <li><strong>VehicleFactory:</strong> centralizes object creation for vehicles.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              An abstract class is used for `Vehicle` because every vehicle has shared state: plate number and vehicle
+              type. If we used only an interface, each concrete class would repeat the same fields and getters. The
+              abstract class gives inheritance for common data while still allowing concrete classes such as `Car`,
+              `Bike`, and `Bus` to represent specific vehicle categories.
+            </p>
+            <p>
+              Factory Pattern is used for vehicle creation because object creation should be centralized. The caller can
+              pass a `VehicleType`, and the factory decides whether to create a `Car`, `Bus`, or `Bike`. This makes the
+              creation logic easy to extend when new vehicle types are added.
+            </p>
+            <p>
+              The design also uses composition heavily. `ParkingManager` has floors, a floor has slots, and a slot has
+              occupancy information. This HAS-A structure is better than forcing inheritance between unrelated concepts.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              The parking allocation algorithm scans floors and slots to find the first compatible free slot for the
+              requested vehicle type. Once a candidate slot is found, it tries to reserve the slot. The important detail
+              is that reservation should be atomic so two parallel entry-gate requests cannot assign the same slot.
+            </p>
+            <p>
+              In the current design, `ConcurrentHashMap` and atomic replacement help protect slot state. The algorithm
+              is essentially a first-fit allocation strategy. It is simple and predictable, but not always optimal. In a
+              production system, this could be replaced by a strategy such as nearest-slot, lowest-floor-first,
+              gate-aware allocation, or reserved-slot allocation.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would separate parking orchestration from slot state. The manager scans floors and delegates actual
+              slot assignment to the floor's slot container. Vehicles use inheritance because they share common state,
+              and atomic slot updates prevent two requests from booking the same slot."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Add ticket, payment, pricing strategy, entry gate, and exit gate classes.</li>
+              <li>Support nearest-slot or best-slot allocation strategy.</li>
+              <li>Persist active tickets and parking history.</li>
+              <li>Add reservations, electric charging slots, and disabled-accessible slots.</li>
+              <li>Use distributed locks if multiple entry gates run on different machines.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The demo captures slot allocation, but a full parking lot design should model tickets, gates, pricing,
+              payment, time-based fee calculation, and persistence.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../interview-notes.css">
 </head>
 <body>
   <div class="page-shell">
@@ -22,7 +23,7 @@
         </div>
         <div class="nav-group">
           <a class="nav-pill" href="../index.html">LLD Designs</a>
-          <a class="nav-pill" href="#approach">Architecture Walkthrough</a><a class="nav-pill" href="#snippets">Snippets</a><a class="nav-pill" href="#run-code">Code</a>
+          <a class="nav-pill" href="#approach">Architecture Walkthrough</a><a class="nav-pill" href="#snippets">Snippets</a><a class="nav-pill" href="#run-code">Code</a><a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -647,6 +648,152 @@ public class Main {
             <p>The game pushes updates only when a move actually happens. That is more efficient, easier to test, and much closer to how real-time multiplayer events should work.</p>
           </article>
         </div>
+      </section>
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Snake and Ladder LLD separates board data, player state, dice generation, game rules, and game
+              orchestration. `Board` stores jumps from one cell to another, `User` stores each player's current
+              position, `Dice` generates moves, and `gameManager` controls turn order through a queue.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Snake and ladder flow diagram">
+                <div class="flow-node">Current player turn starts</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Roll Dice singleton</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Calculate tentative position</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Board resolves jump if present</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Rule checks winning position</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Update player state and rotate queue</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Snake and ladder UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row">
+                  <div class="uml-box interface">playerStatusObserver</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">User</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box interface">playerStatusSubject</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">playerState</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">List&lt;playerStatusObserver&gt;</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">gameManager</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-stack">
+                    <div class="uml-box">Queue&lt;User&gt;</div>
+                    <div class="uml-box class-box">Board</div>
+                    <div class="uml-box class-box">Dice</div>
+                  </div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">Play</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box class-box">Rule</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>User:</strong> represents a player and tracks current position.</li>
+              <li><strong>Dice:</strong> Singleton-style dice generator for moves.</li>
+              <li><strong>Board:</strong> stores all jumps and resolves final position after a move.</li>
+              <li><strong>Rule:</strong> checks whether a move wins or is valid.</li>
+              <li><strong>gameManager:</strong> owns player queue and turn orchestration.</li>
+              <li><strong>playerState:</strong> subject that notifies observers about player state changes.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              Singleton is used for `Dice` in the demo because the game needs one shared dice generator. This avoids
+              creating dice objects everywhere and gives a single place to change dice behavior. In production or unit
+              testing, dependency injection is usually better because it allows deterministic dice rolls.
+            </p>
+            <p>
+              Observer Pattern is used for player state updates. The game manager should not directly know every UI,
+              logger, or scoreboard that needs updates. Instead, player state acts as the subject and observers react
+              when state changes. This keeps the game engine decoupled from display or notification behavior.
+            </p>
+            <p>
+              Queue is used for turn management because Snake and Ladder is naturally round-robin. The current player
+              is removed from the front, takes a turn, and if the game is not over, the player is added back to the end.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              The move algorithm starts by polling the next player from the queue. The dice generates a number from 1
+              to 6. The game calculates `currentPosition + diceValue`. If the move exceeds the board size, the player
+              usually stays in place depending on the rule. Otherwise, the board checks whether the destination has a
+              snake or ladder and returns the final resolved position.
+            </p>
+            <p>
+              Board jump resolution is a map lookup algorithm. A map stores `startCell -> endCell`. If the landed cell
+              exists in the map, the player moves to the mapped value; otherwise, the position remains unchanged. This
+              is efficient because lookup is expected `O(1)`.
+            </p>
+            <p>
+              The winning check is handled by `Rule`. After final position is resolved, the rule checks whether the
+              player reached the target cell. If yes, the game ends; otherwise, the player is pushed back into the turn
+              queue.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would keep board logic separate from game orchestration. The manager controls turn order, dice gives
+              the move, board resolves snakes or ladders, and rule validates the outcome. This keeps the design easy to
+              extend for custom board sizes, extra dice, or different winning rules."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Rename classes to Java conventions: `GameManager`, `PlayerState`, and `PlayerStatusObserver`.</li>
+              <li>Add support for configurable board size, dice count, and exact-win rule.</li>
+              <li>Validate that jumps do not create impossible or circular board states.</li>
+              <li>Separate random dice from deterministic dice for unit testing.</li>
+              <li>Add a game status model: waiting, running, completed.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The demo explains the object model, but production-quality code should improve naming conventions,
+              encapsulation, validation of board configuration, and deterministic testing of dice behavior.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>

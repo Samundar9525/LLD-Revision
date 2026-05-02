@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../interview-notes.css">
 </head>
 <body>
   <div class="page-shell">
@@ -23,6 +24,7 @@
         <div class="nav-group">
           <a class="nav-pill" href="../index.html">Home</a>
           <a class="nav-pill" href="#algorithms">Algorithms</a>
+          <a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -723,6 +725,144 @@ public class RateLimiterClient {
               frameborder="0"></iframe>
           </article>
         </div>
+      </section>
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Rate Limiter LLD exposes one `RateLimiter` interface and plugs in different algorithms behind it:
+              Fixed Window, Sliding Window, and Token Bucket. The client depends on the interface, not concrete classes,
+              so the limiter algorithm can be changed based on API, user tier, or traffic pattern.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Rate limiter flow diagram">
+                <div class="flow-node">Incoming request arrives</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Identify client or API key</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Pick RateLimiter implementation</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Check window / bucket state</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Update counters atomically</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Allow or reject request</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Rate limiter UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row">
+                  <div class="uml-box interface">RateLimiter</div>
+                  <div class="uml-branch">
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">FixedWindowRateLimiter</div>
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">SlidingWindow</div>
+                  </div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box interface">RateLimiter</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">TokenBucket</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">capacity, tokens, refillRate</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">RateLimiterClient</div>
+                  <div class="uml-link hasa">HAS-A / USES</div>
+                  <div class="uml-box interface">RateLimiter</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">RequestEvent</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>RateLimiter:</strong> common contract for checking if a request is allowed.</li>
+              <li><strong>FixedWindowRateLimiter:</strong> simple counter reset after each fixed time window.</li>
+              <li><strong>SlidingWindow:</strong> tracks recent request timestamps for smoother limiting.</li>
+              <li><strong>TokenBucket:</strong> refills tokens over time and allows bursts up to capacity.</li>
+              <li><strong>RateLimiterClient:</strong> simulates concurrent calls through the shared interface.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              Strategy Pattern is used because rate limiting has multiple valid algorithms, and each one has different
+              tradeoffs. Fixed Window is simple and memory-efficient, Sliding Window is smoother and more accurate, and
+              Token Bucket supports controlled bursts. The client should depend on the `RateLimiter` interface and not
+              hard-code a specific algorithm.
+            </p>
+            <p>
+              This design follows Open/Closed Principle. If tomorrow we need Leaky Bucket, Sliding Window Counter, or a
+              distributed Redis-based limiter, we can add a new implementation of `RateLimiter` without changing the
+              client code that calls `isAllowRequest()`.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              Fixed Window keeps a counter for a fixed time range. If the current request belongs to the same window,
+              the counter increments. If the window has expired, the counter resets. It is fast and simple, but it can
+              allow traffic spikes at window boundaries.
+            </p>
+            <p>
+              Sliding Window stores timestamps of recent requests. Before allowing a new request, it removes timestamps
+              older than the allowed duration and checks the remaining count. This gives a more accurate limit across
+              time, but it uses more memory because it tracks request history.
+            </p>
+            <p>
+              Token Bucket maintains a bucket of tokens. Tokens refill over time up to a maximum capacity. Each request
+              consumes one token. If no token is available, the request is rejected. This is often preferred in
+              production because it allows short bursts while preserving the average request rate.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would expose a `RateLimiter` interface and implement algorithms independently. Fixed window is simple
+              but can allow boundary bursts. Sliding window is more accurate but stores more state. Token bucket is a
+              strong production default because it supports controlled bursts while maintaining an average rate."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Store counters in Redis for distributed rate limiting.</li>
+              <li>Use atomic Redis commands or Lua scripts to avoid race conditions.</li>
+              <li>Apply limits per user, IP, API key, tenant, or endpoint.</li>
+              <li>Return retry-after metadata and structured rejection reasons.</li>
+              <li>Add config-driven limits for free, premium, and internal clients.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The demo is in-memory and process-local. In a real multi-server system, each instance would have its own
+              counters unless state is moved to a shared atomic store like Redis.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>

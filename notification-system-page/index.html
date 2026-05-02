@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../interview-notes.css">
 </head>
 <body>
   <div class="page-shell">
@@ -19,6 +20,7 @@
           <a class="nav-pill" href="../index.html">Home</a>
           <a class="nav-pill" href="#patterns">Patterns</a>
           <a class="nav-pill" href="#run-code">Code</a>
+          <a class="nav-pill" href="#interview-notes">Notes</a>
         </div>
       </nav>
 
@@ -276,6 +278,147 @@ public class Main {
           </article>
           <article class="panel compiler-panel reveal"><h3>Embedded Compiler</h3><p class="compiler-note">Copy the Java source on the left and paste it into the compiler. It runs immediately with direct and broadcast examples.</p><iframe class="compiler-frame" title="Embedded Java Compiler" src="https://onecompiler.com/embed/java?theme=light&amp;hideLanguageSelection=true" loading="lazy" frameborder="0"></iframe></article>
         </div>
+      </section>
+      <section class="section interview-notes" id="interview-notes">
+        <div class="section-heading notes-heading">
+          <p class="eyebrow">Interview Ready</p>
+          <h2>Notes For Interview</h2>
+        </div>
+
+        <article class="notes-panel notes-single-card reveal">
+          <div class="notes-section">
+            <h3>How to explain the design</h3>
+            <p>
+              This Notification System LLD separates notification channel selection from broadcast subscription.
+              Direct sending uses `NotificationStrategy`, so Email, SMS, and WhatsApp are interchangeable channels.
+              Broadcast messaging uses Observer Pattern, where a subject keeps subscribers and notifies each observer
+              when a message is published.
+            </p>
+          </div>
+
+          <div class="notes-diagram-grid">
+            <section class="notes-section">
+              <h3>Flow Diagram</h3>
+              <div class="flow-diagram" aria-label="Notification system flow diagram">
+                <div class="flow-node">Client creates message</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Choose notification channel</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">MessageService delegates to strategy</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">Channel sends direct notification</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">For broadcast, Subject notifies observers</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node success">Subscribers receive update</div>
+              </div>
+            </section>
+
+            <section class="notes-section">
+              <h3>UML Diagram: IS-A and HAS-A</h3>
+              <div class="uml-diagram" aria-label="Notification UML diagram with IS-A and HAS-A relationships">
+                <div class="uml-row">
+                  <div class="uml-box interface">NotificationStrategy</div>
+                  <div class="uml-branch">
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">Email</div>
+                    <div class="uml-link isa">IS-A</div>
+                    <div class="uml-box class-box">SMS</div>
+                  </div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box interface">MessageSubject</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">MessageConcreteSubject</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box">List&lt;MessageObserver&gt;</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box interface">MessageObserver</div>
+                  <div class="uml-link isa">IS-A</div>
+                  <div class="uml-box class-box">MessageConcreteObserver</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box class-box">User</div>
+                </div>
+                <div class="uml-row">
+                  <div class="uml-box class-box">MessageService</div>
+                  <div class="uml-link hasa">HAS-A</div>
+                  <div class="uml-box interface">NotificationStrategy</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="notes-section">
+            <h3>Core classes</h3>
+            <ul class="notes-list">
+              <li><strong>NotificationStrategy:</strong> contract for sending a message through a channel.</li>
+              <li><strong>Email, SMS, WhatsApp:</strong> concrete channel strategies.</li>
+              <li><strong>MessageService:</strong> stores message data and delegates sending to a selected strategy.</li>
+              <li><strong>MessageSubject:</strong> manages subscriber registration and broadcast notification.</li>
+              <li><strong>MessageObserver:</strong> receives broadcast updates.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section">
+            <h3>Why these patterns are used</h3>
+            <p>
+              Strategy Pattern is used because the way a notification is delivered changes by channel. Email, SMS,
+              WhatsApp, push notification, and in-app notification all have different providers, payloads, failure
+              behavior, and latency. The service should not contain channel-specific `if-else` logic. By depending on
+              `NotificationStrategy`, the sender can plug in a channel at runtime.
+            </p>
+            <p>
+              Observer Pattern is used for broadcast use cases. A subject represents the event source, and observers
+              represent subscribers. When a new broadcast message is published, the subject does not need to know each
+              subscriber's internal behavior. It simply calls `update()` on all registered observers. This keeps the
+              publisher loosely coupled from receivers.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Algorithm explanation</h3>
+            <p>
+              Direct notification flow is straightforward: create message data, choose a notification strategy, and call
+              `send`. The selected strategy owns provider-specific delivery behavior. This is a runtime polymorphism
+              example: the same method call behaves differently depending on the concrete strategy object.
+            </p>
+            <p>
+              Broadcast flow is a fan-out algorithm. The subject stores a list of observers. When a message arrives, it
+              iterates through subscribers and invokes their `update` method. In production, this fan-out should usually
+              be asynchronous through a queue, because one slow or failed subscriber should not block the whole
+              broadcast.
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Strong interview answer</h3>
+            <p class="quote-line">
+              "I would use Strategy Pattern for notification channels and Observer Pattern for broadcast. Strategy
+              lets the client choose Email, SMS, or WhatsApp without changing the service. Observer lets many users
+              subscribe to a subject and receive updates when a broadcast event happens."
+            </p>
+          </div>
+
+          <div class="notes-section">
+            <h3>Production improvements</h3>
+            <ul class="notes-list">
+              <li>Add retry policy, dead-letter queue, and failure tracking.</li>
+              <li>Make sends asynchronous through a queue such as Kafka, SQS, or RabbitMQ.</li>
+              <li>Add user preferences, quiet hours, and unsubscribe rules.</li>
+              <li>Add templates, localization, rate limits, and provider fallback.</li>
+              <li>Track notification delivery states: queued, sent, failed, delivered, read.</li>
+            </ul>
+          </div>
+
+          <div class="notes-section notes-caution">
+            <h3>Weakness to mention</h3>
+            <p>
+              The in-memory demo shows patterns well, but a production notification system must handle asynchronous
+              delivery, provider failures, retries, idempotency, and user preferences.
+            </p>
+          </div>
+        </article>
       </section>
     </main>
   </div>
