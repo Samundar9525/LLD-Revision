@@ -6,6 +6,9 @@
   display: inline-flex;
   gap: 10px;
   align-items: center;
+  min-height: 42px;
+  min-width: 188px;
+  justify-content: center;
   padding: 10px 12px;
   border: 1px solid rgba(34, 27, 24, 0.1);
   border-radius: 999px;
@@ -16,12 +19,14 @@
   font: 800 0.82rem "Manrope", system-ui, sans-serif;
 }
 
-.visitor-widget.is-ready {
-  display: inline-flex;
+.visitor-widget.is-error {
+  opacity: 0.82;
 }
 
-.visitor-widget.is-error {
-  opacity: 0.72;
+a[href*="icount.kr"],
+img[src*="icount.kr"],
+iframe[src*="icount.kr"] {
+  display: none !important;
 }
 
 .visitor-stat {
@@ -50,6 +55,7 @@
     right: 10px;
     bottom: 10px;
     max-width: calc(100% - 20px);
+    min-width: 0;
     border-radius: 18px;
     flex-wrap: wrap;
   }
